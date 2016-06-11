@@ -374,6 +374,8 @@ BIND_GLOBAL( "EndlineFunc", ENDLINE_FUNC );
 ##  gap> PrintDigits( 1, 9, 7, 3, 2 );
 ##  [ 1, 9, 7, 3, 2 ]
 ##  ]]></Example>
+##  To generically handle classes of functions, only some of which return values,
+##  see <Ref Func="CallFuncListWrap"/>
 ##  </Description>
 ##  </ManSection>
 ##  <#/GAPDoc>
@@ -383,6 +385,45 @@ BIND_GLOBAL( "EndlineFunc", ENDLINE_FUNC );
 UNBIND_GLOBAL("CallFuncList"); # was declared 2b defined
 DeclareOperationKernel( "CallFuncList", [IS_OBJECT, IS_LIST], CALL_FUNC_LIST );
 
+#############################################################################
+##
+#F  CallFuncListWrap( <func>, <args> )  . . . . . . . . . . . . . call a function
+##
+##  <#GAPDoc Label="CallFuncListWrap">
+##  <ManSection>
+##  <Func Name="CallFuncListWrap" Arg='func, args'/>
+##
+##  <Description>
+##  Like <Ref Oper="CallFuncList"/>, returns the result, when calling function
+##  <A>func</A> with the arguments  given in the list <A>args</A>.
+##  The difference is that <Ref Func="CallFuncListWrap"/> returns a list.
+##  This list is length 0 if <A>func</A> returns nothing. If <A>func</A>
+##  returns a value, then this list contains the return value of <A>func</A>.
+##  This is useful for wrapping functions which may or may not return.
+##  For example, a function which prints out the arguments to a function,
+##  and it's return value (if it exists)
+##  <Example><![CDATA[
+##  gap> Explain := function ( func, args... )
+##  >     local ret;
+##  >     ret := CallFuncListWrap( func, args );
+##  >     Print(NameFunction(func), " given ", args);
+##  >     if ret = [] then
+##  >       Print(" returns nothing\n");
+##  >     else
+##  >       Print(" returns ", ret[1], "\n");
+##  >     fi;
+##  >    end;
+##  function( func, args... ) ... end
+##  gap> Explain(Union, [1,2], [3,4] );
+##  Union given [ [ 1, 2 ], [ 3, 4 ] ] returns [ 1, 2, 3, 4 ]
+##  gap> Explain(Add, [ [], 2 ]);
+##  Add given [ [ 2 ], 2 ] returns nothing
+##  ]]></Example>
+##  </Description>
+##  </ManSection>
+##  <#/GAPDoc>
+
+BIND_GLOBAL("CallFuncListWrap", CALL_FUNC_LIST_WRAP );
 
 #############################################################################
 ##

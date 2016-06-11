@@ -1586,6 +1586,39 @@ Obj FuncCALL_FUNC_LIST (
 
 /****************************************************************************
 **
+*F  FuncCALL_FUNC_LIST_WRAP( <self>, <func>, <list> )  . . . . .call a function
+**
+**  'FuncCALL_FUNC_LIST_WRAP' implements the function 'CallFuncListWrap'.
+**
+**  'CallFuncListWrap( <func>, <list> )'
+**
+**  'CallFuncListWrap' calls the  function <func> with the arguments
+**  list <list>, i.e., it is equivalent to '<func>( <list>[1], <list>[2]... )'.
+**  It differs from 'CallFuncList' as it returns it's arguments as a list,
+**  which is empty is the function returns no value.
+*/
+
+Obj FuncCALL_FUNC_LIST_WRAP (
+    Obj                 self,
+    Obj                 func,
+    Obj                 list )
+{
+    Obj retval = CallFuncList(func, list);
+    Obj retlist;
+    if( retval == 0 ) {
+        retlist = NEW_PLIST(T_PLIST_EMPTY+IMMUTABLE, 0);
+    }
+    else {
+            retlist = NEW_PLIST(T_PLIST, 1);
+            SET_LEN_PLIST(retlist, 1);
+            SET_ELM_PLIST(retlist, 1, retval);
+            CHANGED_BAG(retlist);
+    }
+    return retlist;
+}
+
+/****************************************************************************
+**
 
 *F * * * * * * * * * * * * * * * utility functions  * * * * * * * * * * * * *
 */
@@ -2070,6 +2103,10 @@ static StructGVarFunc GVarFuncs [] = {
 
     { "ENDLINE_FUNC", 1, "func", 
       FuncENDLINE_FUNC, "src/calls.c:ENDLINE_FUNC" },
+
+    { "CALL_FUNC_LIST_WRAP", 2, "func, list",
+      FuncCALL_FUNC_LIST_WRAP, "src/calls.c:CALL_FUNC_LIST_WRAP" },
+
     { 0 }
 
 };
