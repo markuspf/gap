@@ -1653,7 +1653,7 @@ DeclareAttribute( "InvariantForm", IsGroup );
 ##  This series is defined by setting
 ##  <M>G_1 = <A>G</A></M> and for <M>i \geq 0</M>,
 ##  <M>G_{{i+1}} = [G_i,<A>G</A>] G_j^p</M>,
-##  where <M>j</M> is the smallest integer <M>\geq i/p</M>.
+##  where <M>j</M> is the smallest integer <M>> i/p</M>.
 ##  </Description>
 ##  </ManSection>
 ##  <#/GAPDoc>
@@ -2893,7 +2893,7 @@ DeclareOperation( "IsCharacteristicSubgroup", [IsGroup,IsGroup] );
 ##
 ##  <#GAPDoc Label="IsPNilpotent">
 ##  <ManSection>
-##  <Func Name="IsPNilpotent" Arg='G, p'/>
+##  <Oper Name="IsPNilpotent" Arg='G, p'/>
 ##
 ##  <Description>
 ##  A group is <M>p</M>-nilpotent if it possesses a normal <M>p</M>-complement.
@@ -2910,7 +2910,7 @@ KeyDependentOperation( "IsPNilpotent", IsGroup, IsPosInt, "prime" );
 ##
 ##  <#GAPDoc Label="IsPSolvable">
 ##  <ManSection>
-##  <Func Name="IsPSolvable" Arg='G, p'/>
+##  <Oper Name="IsPSolvable" Arg='G, p'/>
 ##
 ##  <Description>
 ##  A finite group is <M>p</M>-solvable if every chief factor either has
@@ -3112,7 +3112,7 @@ KeyDependentOperation( "PCentralSeries", IsGroup, IsPosInt, "prime" );
 ##
 ##  <#GAPDoc Label="PRump">
 ##  <ManSection>
-##  <Func Name="PRump" Arg='G, p'/>
+##  <Oper Name="PRump" Arg='G, p'/>
 ##
 ##  <Description>
 ##  For a prime <M>p</M>, the <E><A>p</A>-rump</E> of a group <A>G</A> is
@@ -4052,8 +4052,8 @@ DeclareAttribute( "IsomorphismFpGroup", IsGroup );
 ##
 ##  <#GAPDoc Label="IsomorphismFpGroupByGenerators">
 ##  <ManSection>
-##  <Attr Name="IsomorphismFpGroupByGenerators" Arg='G,gens[,string]'/>
-##  <Attr Name="IsomorphismFpGroupByGeneratorsNC" Arg='G,gens,string'/>
+##  <Func Name="IsomorphismFpGroupByGenerators" Arg='G,gens[,string]'/>
+##  <Oper Name="IsomorphismFpGroupByGeneratorsNC" Arg='G,gens,string'/>
 ##
 ##  <Description>
 ##  returns an isomorphism from a finite group <A>G</A>
@@ -4185,7 +4185,15 @@ DeclareAttribute( "IsomorphismFpGroup", IsGroup );
 ##  , 0, 0, 0, 1 ] ] ]->[ F1, F2 ]>
 ##  gap> ConstituentsCompositionMapping(iso);
 ##  [ <action isomorphism>, 
-##    [ (2,3,4)(5,6)(8,9,10), (1,2,3,5)(6,7,8,9) ] -> [ F1, F2 ] ]
+##  [ (2,3,5,9,16,29)(4,7,13,24,19,32)(6,11,20,34,40,57)(8,15,28,46,42,
+##      59)(10,18,25,41,49,67)(12,22,37,53,48,66)(14,26,31)(17,30,35,
+##      50,58,38)(21,36,33)(23,39,56)(27,44,61,72,43,60)(45,62,51,68,
+##      54,70)(47,64,73)(52,69)(55,71,75,78,77,76)(65,74), 
+##    (1,2,4,8)(3,6,12,23)(5,10,19,33)(7,14,27,45)(9,17,18,31)(11,21,
+##      16,28)(13,25,42,57)(20,35,51,67)(22,38,55,70)(24,40,26,43)(29,
+##      37,54,39)(30,47,65,68)(32,48)(34,49,36,52)(41,58,56,61)(44,50,
+##      53,64)(46,63,69,59)(60,66,75,79)(62,73,72,77)(71,76,80,74) 
+##   ] -> [ F1, F2 ] ]
 ##  ]]></Example>
 ##  <P/>
 ##  Since &GAP; cannot decompose elements of a matrix group into generators,
@@ -4289,7 +4297,7 @@ DeclareGlobalFunction( "PowerMapOfGroupWithInvariants" );
 ##
 ##  <#GAPDoc Label="HasAbelianFactorGroup">
 ##  <ManSection>
-##  <Oper Name="HasAbelianFactorGroup" Arg='G, N'/>
+##  <Func Name="HasAbelianFactorGroup" Arg='G, N'/>
 ##
 ##  <Description>
 ##  tests whether <A>G</A> <M>/</M> <A>N</A> is abelian
@@ -4332,7 +4340,7 @@ DeclareGlobalFunction("HasSolvableFactorGroup");
 ##
 ##  <#GAPDoc Label="HasElementaryAbelianFactorGroup">
 ##  <ManSection>
-##  <Oper Name="HasElementaryAbelianFactorGroup" Arg='G, N'/>
+##  <Func Name="HasElementaryAbelianFactorGroup" Arg='G, N'/>
 ##
 ##  <Description>
 ##  tests whether <A>G</A> <M>/</M> <A>N</A> is elementary abelian
