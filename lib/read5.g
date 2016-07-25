@@ -3,6 +3,9 @@
 #X  now read all the implementation parts
 ##
 
+ReadLib( "dict.gi");
+ReadLib( "annotateConstructors.g" );
+
 ReadLib( "rvecempt.gi" );
 ReadLib( "ratfun1.gi"  );
 ReadLib( "matrix.gi"   );
@@ -147,7 +150,7 @@ ReadLib( "grppcatr.gi" );
 ReadLib( "grppcnrm.gi" );
 
 # files dealing with trees and hash tables
-ReadLib( "dict.gi"  );
+#ReadLib( "dict.gi"  );
 ReadLib( "dicthf.gi"  );
 
 ReadLib( "grptbl.gi"   );

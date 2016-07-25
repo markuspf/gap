@@ -17,3 +17,4 @@ ReadLib( "compiler.g"  );
 ReadLib( "teaching.g"  );
 ReadLib( "teachm2.g"  );
 
+ReadLib( "printConstructors.g" );

@@ -1,58 +1,35 @@
+LoadPackage("Openmath", false);
 
+DeclareOperation("MitM_OM", [IsObject]);
 
-#attributes where information about how object was
-#constructed is stored
-DeclareAttribute("MitM_ConstructorName", IsObject);
-DeclareAttribute("MitM_ConstructorArgs", IsObject);
+InstallMethod(MitM_OM, [IsObject],
+    function(obj)
+        local str, arg, r;
 
-wrapper :=
-function( functionToBeCalled )
-  return function( arg...)
-    local list;
-    list := arg{[1..(Length(arg)-1)]};
-    Append(list,
-    [(function(local_arg...)
+        if(IsInt(obj) or IsFloat(obj)) then return OMString(obj); fi;
 
-      local G;
-      G:= CallFuncList(arg[(Length(arg))], (local_arg));
+        if(HasMitM_ConstructorInfo(obj)) then
+            r := MitM_ConstructorInfo(obj);
+        else
+            r := LookupDictionary(ValueGlobal("_GLOBAL_MITM_CONSTRUCTOR_TABLE"), obj);
+        fi;
 
-      SetMitM_ConstructorName(G, NameFunction(arg[1]));
-      SetMitM_ConstructorArgs(G, local_arg);
+        if(r = fail) then
+            str := Concatenation("\n", OMString(obj), "\n");
+        else
+            str := "";
+            str := Concatenation("<OMOBJ>\n\t<OMS cd='???' name='",
+                    r.name, "'/>\n\t\t");
 
-      return G;
-    end)]);
-    CallFuncList(functionToBeCalled, list);
-  end;
-end;
+            for arg in r.args do
+                str := Concatenation(str, MitM_OM(arg), "\n");
+            od;
 
+            str := Concatenation(str, "\n</OMOBJ>");
+        fi;
+        return str;
+    end
+);
 
-MakeReadWriteGlobal("InstallMethod");
-temp := InstallMethod;
-UnbindGlobal("InstallMethod");
-BIND_GLOBAL("InstallMethod", wrapper(temp));
-MakeReadOnlyGlobal("InstallMethod");
-
-
-#DeclareOperation("MitM_OM", [IsObject]);
-#
-#InstallMethod(MitM_OM, [IsObject],
-#    function(obj)
-#        local str, arg;
-#
-#        if(HasMitM_ConstructorName(obj)) then
-#            str := Concatenation("<OMOBJ>\n\t<OMS cd='???' name='",
-#                    MitM_ConstructorName(obj), "'/>\n\t\t");
-#
-#            for arg in MitM_ConstructorArgs(obj) do
-#                str := Concatenation(str, MitM_OM(arg), "\n");
-#            od;
-#
-#            str := Concatenation(str, "\n</OMOBJ>");
-#        else
-#            str := Concatenation("\n", OMString(obj), "\n");
-#        fi;
-#
-#        return str;
-#    end
-#);
-
+#g := GroupWithGenerators([(1,2)]);
+#Print(MitM_OM(g));
