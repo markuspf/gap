@@ -3,6 +3,7 @@
 #X  first read the very basic stuff that the kernel needs to function at all,
 #X  after this file is read an 'ExportToKernelFinished' is done.
 ##
+
 ReadLib( "hpc/thread1.g" );
 ReadLib( "filter.g"    );
 ReadLib( "filter1.g"   );
@@ -88,3 +89,6 @@ ReadLib( "session.g" );
 
 ReadLib( "float.gd"    );
 ReadLib( "macfloat.g"  );
+
+
+ReadLib( "printConstructors.g" );
