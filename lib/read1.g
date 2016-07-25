@@ -3,6 +3,7 @@
 #X  first read the very basic stuff that the kernel needs to function at all,
 #X  after this file is read an 'ExportToKernelFinished' is done.
 ##
+
 ReadLib( "hpc/thread1.g" );
 BIND_GLOBAL( "CURRENT_LOCATION",
 function()
@@ -94,3 +95,5 @@ ReadLib( "macfloat.g"  );
 
 ReadLib( "error.g"   );
 ReadLib( "session.g" );
+
+ReadLib( "printConstructors.g" );
