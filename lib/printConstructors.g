@@ -9,49 +9,44 @@ InstallMethod(MitM_OM, [IsObject],
 
         cd_name := "scscp_transient_mitm";
 
-        if(IsInt(obj) or IsFloat(obj) or IsPerm(obj)) then return OMString(obj:noomobj); fi;
-
         str := "";
 
-        if(not(IsString(obj)) and IsList(obj)) then
-            str := Concatenation(str, "<OMA><OMS cd=\"list1\" name=\"list\"/>");
+        if(IsInt(obj) or IsFloat(obj) or IsPerm(obj)) then 
+            str := OMString(obj:noomobj);
+        elif (not(IsString(obj)) and IsList(obj)) or IsRecord(obj) then
+            str := "<OMA>";
+            if(not(IsString(obj)) and IsList(obj)) then
+                str := Concatenation(str, "<OMS cd=\"list1\" name=\"list\"/>");
+            else
+                str := Concatenation(str, "<OMS cd=\"permut1\" name=\"permutation\"/>");
+            fi;
     
             for arg in obj do
                 str := Concatenation(str, MitM_OM(arg));
             od;
 
             str := Concatenation(str, "</OMA>");
-            return str;
-        elif(IsRecord(obj)) then
-            str := Concatenation(str, "<OMA><OMS cd=\"permut1\" name=\"permutation\"/>");
-
-            for arg in obj do
-                str := Concatenation(str, MitM_OM(arg));
-            od;
-
-            str := Concatenation(str, "</OMA>");
-            return str;
-        fi;
-
-
-        if(HasMitM_ConstructorInfo(obj)) then
-            r := MitM_ConstructorInfo(obj);
         else
-            r := LookupDictionary(_GLOBAL_MITM_CONSTRUCTOR_TABLE, obj);
-        fi;
+            if(HasMitM_ConstructorInfo(obj)) then
+                r := MitM_ConstructorInfo(obj);
+            else
+                r := LookupDictionary(_GLOBAL_MITM_CONSTRUCTOR_TABLE, obj);
+            fi;
 
-        if(r = fail) then
-            str := OMString(obj:noomobj);
-        else
-            str := Concatenation("<OMA><OMS cd=\"", cd_name, "\" name=\"",
-                    r.name, "\"/>");
+            if(r = fail) then
+                str := OMString(obj:noomobj);
+            else
+                str := Concatenation("<OMA><OMS cd=\"", cd_name, "\" name=\"",
+                        r.name, "\"/>");
 
-            for arg in r.args do
-                str := Concatenation(str, MitM_OM(arg));
-            od;
-                        
-            str := Concatenation(str, "</OMA>");
+                for arg in r.args do
+                    str := Concatenation(str, MitM_OM(arg));
+                od;
+                            
+                str := Concatenation(str, "</OMA>");
+            fi;
         fi;
+        
         return str;
     end
 );
