@@ -2,7 +2,7 @@ LoadPackage("Openmath", false);
 
 DeclareOperation("MitM_OM", [IsObject]);
 
-TODO: refactor
+#TODO: refactor
 InstallMethod(MitM_OM, [IsObject],
     function(obj)
         local str, arg, r, cd_name;
