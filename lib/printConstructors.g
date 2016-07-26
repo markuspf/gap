@@ -46,7 +46,9 @@ InstallMethod(MitM_OM, [IsObject],
             str := Concatenation("<OMA><OMS cd=\"", cd_name, "\" name=\"",
                     r.name, "\"/>");
 
-            str := Concatenation(str, MitM_OM(r.args));
+            for arg in r.args do
+                str := Concatenation(str, MitM_OM(arg));
+            od;
                         
             str := Concatenation(str, "</OMA>");
         fi;
