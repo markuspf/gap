@@ -3,6 +3,8 @@ DeclareAttribute("MitM_ConstructorInfo", IsObject);
 
 BIND_GLOBAL("_GLOBAL_MITM_CONSTRUCTOR_TABLE", NewDictionary(false, true));
 
+#TODO: remove this from global scope
+#TODO: rename variables
 wrapper :=
 function( functionToBeCalled )
   return function( arg...)
@@ -11,23 +13,23 @@ function( functionToBeCalled )
     Append(list,
     [(function(local_arg...)
 
-      local G, r;
-      G:= CallFuncListWrap(arg[(Length(arg))], (local_arg));
+      local res, r;
+      res := CallFuncListWrap(arg[(Length(arg))], (local_arg));
 
-      if(Length(G) = 0) then
+      if(Length(res) = 0) then
         return;
       fi;
 
-      G := G[1];
+      res := res[1];
       r := rec(name := NameFunction(arg[1]), args := local_arg);
 
-      if(IsAttributeStoringRep(G)) then
-        SetMitM_ConstructorInfo(G, r);
+      if(IsAttributeStoringRep(res)) then
+        SetMitM_ConstructorInfo(res, r);
       else
-        AddDictionary(ValueGlobal("_GLOBAL_MITM_CONSTRUCTOR_TABLE"), G, r);
+        AddDictionary(ValueGlobal("_GLOBAL_MITM_CONSTRUCTOR_TABLE"), res, r);
       fi;
 
-      return G;
+      return res;
     end)]);
     CallFuncList(functionToBeCalled, list);
   end;
