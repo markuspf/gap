@@ -2,6 +2,20 @@ LoadPackage("Openmath", false);
 
 DeclareOperation("MitM_OM", [IsObject]);
 
+for filter in [IsInt, IsFloat, IsPerm, IsTransformation, IsRationals] do
+    InstallMethod(MitM_OM, [filter],
+        function(obj)
+            return OMString(obj:noomobj); 
+        end
+    );
+od;
+
+InstallMethod(MitM_OM, [IsString],
+    function(obj)
+        return obj;
+    end
+);
+
 InstallMethod(MitM_OM, [IsObject],
     function(obj)
         local str, arg, r, cd_name;
@@ -10,9 +24,7 @@ InstallMethod(MitM_OM, [IsObject],
 
         str := "";
 
-        if(IsInt(obj) or IsFloat(obj) or IsPerm(obj)) then 
-            str := OMString(obj:noomobj);
-        elif (not(IsString(obj)) and IsList(obj)) or IsRecord(obj) then
+        if (IsList(obj) or IsRecord(obj)) then
             str := "<OMA>";
             if(not(IsString(obj)) and IsList(obj)) then
                 str := Concatenation(str, "<OMS cd=\"list1\" name=\"list\"/>");
