@@ -25,7 +25,8 @@ function( functionToBeCalled, replacedFunction )
         if(replacedFunction = "InstallGlobalFunction") then
             r := rec(name := "", args := local_arg);
         else
-            r := rec(name := NameFunction(arg[1]), args := local_arg);
+            #r := rec(name := NameFunction(arg[1]), args := local_arg);
+            r := rec(name := "hihi", args := local_arg);
         fi;
     
         if(IsAttributeStoringRep(res)) then
@@ -43,6 +44,7 @@ end;
 
 for str in ["InstallMethod", "InstallOtherMethod",
     "InstallGlobalFunction"] do 
+    if(str in ["PrintTo", "OutputTextString"]) then continue; fi;
     MakeReadWriteGlobal(str);
     temp := ValueGlobal(str);
     UnbindGlobal(str);
