@@ -9,12 +9,14 @@ wrapper :=
 function( functionToBeCalled, replacedFunction )
   return function( arg...)
     local list;
+
     list := arg{[1..(Length(arg)-1)]};
     Append(list,
     [(function(local_arg...)
         local res, r;
 
-        res := CallFuncListWrap(arg[(Length(arg))], (local_arg));
+
+                res := CallFuncListWrap(arg[(Length(arg))], (local_arg));
     
         if(Length(res) = 0) then
           return;
@@ -22,12 +24,8 @@ function( functionToBeCalled, replacedFunction )
     
         res := res[1];
         
-        if(replacedFunction = "InstallGlobalFunction") then
-            r := rec(name := "", args := local_arg);
-        else
-            #r := rec(name := NameFunction(arg[1]), args := local_arg);
-            r := rec(name := "hihi", args := local_arg);
-        fi;
+        
+        r := rec(name := NameFunction(arg[1]), args := local_arg);
     
         if(IsAttributeStoringRep(res)) then
           SetMitM_ConstructorInfo(res, r);
@@ -42,9 +40,7 @@ function( functionToBeCalled, replacedFunction )
   end;
 end;
 
-for str in ["InstallMethod", "InstallOtherMethod",
-    "InstallGlobalFunction"] do 
-    if(str in ["PrintTo", "OutputTextString"]) then continue; fi;
+for str in ["InstallMethod", "InstallOtherMethod"] do
     MakeReadWriteGlobal(str);
     temp := ValueGlobal(str);
     UnbindGlobal(str);
