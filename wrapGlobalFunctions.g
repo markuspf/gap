@@ -27,13 +27,14 @@ wrapper := function(funcToWrap, str)
     
         res := res[1];
         
-        r := rec(name := "bla", args := local_arg);
-        Print("args: ", local_arg, str, "\n");
-        Print(r);
+        r := rec(name := str, args := local_arg);
     
         if(IsAttributeStoringRep(res)) then
+          if(HasMitM_ConstructorInfo(res)) then
+            Print(MitM_ConstructorInfo(res), "\n");
+            Error("Already has MitM_ConstructorInfo");
+          fi;
           SetMitM_ConstructorInfo(res, r);
-          Print(MitM_ConstructorInfo(res));
         else
           AddDictionary(_GLOBAL_MITM_CONSTRUCTOR_TABLE, res, r);
         fi;

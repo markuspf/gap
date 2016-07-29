@@ -20,7 +20,6 @@ DeclareOperation("MitM_OM", [IsObject]);
 for filter in [IsInt, IsFloat, IsPerm, IsTransformation, IsRationals, IsFFE] do
     InstallMethod(MitM_OM, [filter],
         function(obj)
-            Print(obj, "\n");
             return OMString(obj:noomobj); 
         end
     );
@@ -28,7 +27,6 @@ od;
 
 InstallMethod(MitM_OM, [IsString],
     function(obj)
-        Print("obj", "hello\n");
         return obj;
     end
 );
@@ -43,7 +41,6 @@ InstallMethod(MitM_OM, [IsObject],
         #TODO: EMPTYMATRIX SHOULDN'T BE LIST, SHOULD BE LOOKED UP FIRST
         if(HasMitM_ConstructorInfo(obj)) then
             r := MitM_ConstructorInfo(obj);
-            Print(r);
         else
             #MitM_
             r := MitM_LookupDictionary(_GLOBAL_MITM_CONSTRUCTOR_TABLE, obj);
