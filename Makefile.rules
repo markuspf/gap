@@ -11,7 +11,7 @@
 ########################################################################
 # Default rule: build gap
 ########################################################################
-all: gap$(EXEEXT)
+all: gap$(EXEEXT) gac
 
 # Backwards compatibility: add "default" target as alias for "all"
 default: all
@@ -553,6 +553,9 @@ $(srcdir)/src/config.h.in: $(configure_deps)
 	touch $@
 
 GNUmakefile: $(srcdir)/GNUmakefile.in config.status
+	$(SHELL) ./config.status $@
+
+gac: $(srcdir)/cnf/gac.in config.status
 	$(SHELL) ./config.status $@
 
 
