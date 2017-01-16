@@ -96,6 +96,50 @@ function( obj )
     Print( "Directory(\"", obj![1] ,"\")" );
 end );
 
+InstallMethod( AllFiles,
+               "for a directory",
+               [ IsDirectory ],
+function(directory)
+    local res, e, c, d;
+
+    res := [];
+    c := DirectoryContents(directory);
+
+    for e in c do
+        if (e <> ".") and (e <> "..") then
+            d := Filename(directory, e);
+            if IsDirectoryPath(d) then
+                Append(res, AllFiles(Directory(d)));
+            else
+                Add(res, Filename(directory, e));
+            fi;
+        fi;
+    od;
+
+    return res;
+end);
+
+InstallMethod( AllFiles,
+               "for a string",
+               [ IsString ],
+function(directory)
+    if not IsDirectoryPath(directory) then
+        Error("<directory> is not a directory");
+        return fail;
+    fi;
+    return AllFiles(Directory(directory));
+end);
+
+InstallMethod( AllFiles,
+               "for a list of directories",
+               [ IsList ],
+function(dirs)
+    if ForAny(dirs, x -> not IsDirectory(x)) then
+        Error("<directories> needs to be a list of directories");
+        return fail;
+    fi;
+    return Concatenation(List(dirs, AllFiles));
+end);
 
 #############################################################################
 ##

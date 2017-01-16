@@ -74,6 +74,23 @@ DeclareOperation( "Directory", [ IsString ] );
 
 #############################################################################
 ##
+#O  DirectoryIterator( <directory> )
+##
+##  <#GAPDoc Label="DirectoryIterator">
+##  <ManSection>
+##  <Oper Name="Directory" Arg='string'/>
+##
+##  <Description>
+##  </Description>
+##  </ManSection>
+##  <#/GAPDoc>
+#
+DeclareOperation( "AllFiles", [ IsDirectory ] );
+DeclareOperation( "AllFiles", [ IsStringRep ] );
+DeclareOperation( "AllFiles", [ IsList ] );
+
+#############################################################################
+##
 #F  DirectoryHome() . . . . . . . . . . . . . . .  new directory object
 ##
 ##  <#GAPDoc Label="DirectoryHome">
