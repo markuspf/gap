@@ -5,19 +5,17 @@ AC_PREREQ([2.68])
 AC_INIT([GAP], [4.dev], [support@gap-system.org], [gap], [http://www.gap-system.org/])
 
 AC_CONFIG_SRCDIR([src/gap.c])
-AC_CONFIG_HEADERS([src/config.h])
-AC_CONFIG_MACRO_DIR([cnf/m4])
 AC_CONFIG_AUX_DIR([cnf])
+AC_CONFIG_MACRO_DIR([cnf/m4])
+
+AC_CONFIG_HEADERS([gen/config.h:src/config.h.in])
+AC_CONFIG_COMMANDS([gen/stamp-h], [echo timestamp > gen/stamp-h])
 
 dnl
 dnl Get canonical host information
 dnl
 AC_CANONICAL_HOST
 
-# HACK
-AC_DEFINE_UNQUOTED([SYS_ARCH], ["fake-gap-arch"], [define the name of the architucture])
-AC_DEFINE_UNQUOTED([CONFIGNAME], ["fake-config"], [the CONFIGNAME value of the active configuration])
-# GAPARCH ?
 
 dnl
 dnl Set the language
@@ -27,10 +25,64 @@ AC_LANG([C])
 
 
 dnl
-dnl Check whether to use _GNU_SOURCE etc. (needed for e.g. exp10)
+dnl Check whether to use _GNU_SOURCE etc. (needed for e.g. exp10).
+dnl Must come before anything else using AC_COMPILE_IFELSE
 dnl
-
 AC_USE_SYSTEM_EXTENSIONS
+
+
+dnl
+dnl ABI settings
+dnl
+AC_ARG_VAR(ABI, [Set this equal to 32 or 64 to build GAP (and GMP provided you
+     do not deselect it) in 32- or 64-bit mode. The default value
+     for this option is determined by testing the behaviour of your
+     compiler, so should be 32 on a 32-bit system and 64 on one
+     which is 64-bit. If this is unset, the build system will set
+     a value of 64 or 32 depending of the pointer size of the host.])
+
+AC_MSG_CHECKING([ABI flags])
+AC_MSG_CHECKING([ABI bit size])
+if test "x$ABI" = "x" ;  then
+  ABI_CFLAGS=""
+elif test "$ABI" = "64"; then
+  ABI_CFLAGS="-m64"
+elif test "$ABI" = "32"; then
+  ABI_CFLAGS="-m32"
+else
+  AC_MSG_WARN([ $ABI is not a supported value for ABI. The supported values are ABI=64
+                 or 32.])
+fi
+AC_MSG_RESULT([$ABI_CFLAGS])
+AC_SUBST(ABI_CFLAGS)
+
+dnl Add ABI_CFLAGS to CFLAGS *now*, so that all config tests we
+dnl run from here on use it.
+CFLAGS="$CFLAGS $ABI_CFLAGS"
+LDFLAGS="$LDFLAGS $ABI_CFLAGS"
+
+dnl determine pointer sizes to distinguish 32 and 64 bit systems.
+AC_CHECK_SIZEOF([void *])
+
+dnl ensure that ABI and sizeof(void *) match
+AC_MSG_CHECKING([ABI bit size])
+if test "x$ABI" = "x" ;  then
+  if test $ac_cv_sizeof_void_p = 8; then
+    ABI="64"
+  else
+    ABI="32"
+  fi
+elif test "$ABI" = "32"; then
+  if test $ac_cv_sizeof_void_p != 4; then
+    AC_MSG_ERROR([ ABI=32 used by sizeof(void *) != 4.])
+  fi
+elif test "$ABI" = "64"; then
+  if test $ac_cv_sizeof_void_p != 8; then
+    AC_MSG_ERROR([ ABI=64 used by sizeof(void *) != 8.])
+  fi
+fi
+AC_MSG_RESULT([$ABI])
+AC_SUBST(ABI)
 
 
 dnl autoconf may set CXX to g++ even if there is no working C++ compiler.
@@ -46,7 +98,7 @@ AC_LANG_POP([C++])
 
 
 dnl
-dnl Misc
+dnl Miscellaneous tools
 dnl
 AC_PROG_INSTALL
 AC_PROG_MKDIR_P
@@ -58,15 +110,10 @@ dnl
 LT_PREREQ([2.4.2])
 LT_INIT([disable-static dlopen win32-dll])
 
+
 dnl
 dnl Check for properties of the host system and compiler
 dnl
-
-dnl determine pointer sizes to distinguish 32 and 64 bit systems.
-AC_CHECK_SIZEOF([void *])
-AC_CHECK_SIZEOF([int])
-AC_CHECK_SIZEOF([long])
-AC_CHECK_SIZEOF([long long])
 
 dnl endianess
 AC_C_BIGENDIAN
@@ -74,13 +121,14 @@ AC_C_BIGENDIAN
 dnl shifts
 AC_MSG_CHECKING([whether right shifts are arithmetic])
 AC_COMPUTE_INT(RIGHTSHIFTMINUSONE, [(-1L >> 1)+1])
-if test x"$RIGHTSHIFTMINUSONE" = x0 ; then
+AS_IF([test x"$RIGHTSHIFTMINUSONE" = x0],
+    [
     HAVE_ARITHRIGHTSHIFT=1
     AC_MSG_RESULT([yes])
-else
+    ],[
     HAVE_ARITHRIGHTSHIFT=0
     AC_MSG_RESULT([no])
-fi
+    ])
 AC_DEFINE_UNQUOTED([HAVE_ARITHRIGHTSHIFT],
     [$HAVE_ARITHRIGHTSHIFT],
     [define as 1 if >> for long int behaves like an arithmetic right shift for negative numbers])
@@ -106,13 +154,27 @@ AC_DEFUN([CHECK_COMPILER_BUILTIN],
 CHECK_COMPILER_BUILTIN([__builtin_smul_overflow],[0,0,0]);
 CHECK_COMPILER_BUILTIN([__builtin_smull_overflow],[0,0,0]);
 CHECK_COMPILER_BUILTIN([__builtin_smulll_overflow],[0,0,0]);
+CHECK_COMPILER_BUILTIN([__builtin_clz],[0]);
+CHECK_COMPILER_BUILTIN([__builtin_clzl],[0]);
+CHECK_COMPILER_BUILTIN([__builtin_clzll],[0]);
+
+dnl determine sizeof of some standard types, so that the GAP headers
+dnl can pick the correct builtins among those we just tested
+AC_CHECK_SIZEOF([int])
+AC_CHECK_SIZEOF([long])
+AC_CHECK_SIZEOF([long long])
+
 
 
 dnl
 dnl User settings
 dnl
 
-dnl HPC-GAP mode (off by default)
+dnl
+dnl User setting: HPC-GAP mode (off by default)
+dnl
+dnl If on, build an HPCGAP executable instead of standard GAP.
+dnl
 AC_ARG_ENABLE([hpcgap],
     [AS_HELP_STRING([--enable-hpcgap], [enable HPC-GAP])],
     [AC_DEFINE([HPCGAP], [1], [define if building HPC-GAP])],
@@ -122,12 +184,18 @@ AC_MSG_CHECKING([whether to enable HPC-GAP])
 AC_MSG_RESULT([$enable_hpcgap])
 
 AC_SUBST([HPCGAP], [$enable_hpcgap])
-if test "x$enable_hpcgap" = xyes ; then
+AS_IF([test "x$enable_hpcgap" = xyes],
+    [
     # HACK (see issue #9)
     AC_DEFINE([MAX_GC_THREADS], [4], [maximum number of GC threads])
-fi
+    ])
 
-dnl Debug mode (off by default)
+dnl
+dnl User setting: Debug mode (off by default)
+dnl
+dnl TODO: make this actually do something, e.g. disable or reduce optimizations,
+dnl enable/disable C level assertions, etc.
+dnl
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug], [enable debug mode])],
     [AC_DEFINE([DEBUG], [1], [define if building in debug mode])],
@@ -136,8 +204,16 @@ AC_ARG_ENABLE([debug],
 AC_MSG_CHECKING([whether to enable debug mode])
 AC_MSG_RESULT([$enable_debug])
 
+dnl
+dnl User setting: Compatibility mode (on by default)
+dnl
+CONFIGNAME="default${ABI}"
+BASECC=`basename ${CC}`
+GAPARCH="$host-$BASECC-${CONFIGNAME}"
+AC_DEFINE_UNQUOTED([CONFIGNAME], ["$CONFIGNAME"], [for backwards compatibility])
+AC_DEFINE_UNQUOTED([SYS_ARCH], ["$GAPARCH"], [for backwards compatibility])
+AC_SUBST([GAPARCH])
 
-dnl Compatibility mode for packages (on by default)
 AC_ARG_ENABLE([compat-mode],
     [AS_HELP_STRING([--disable-compat-mode], [enable compatibility mode])],
     [],
@@ -147,6 +223,28 @@ AC_MSG_CHECKING([whether to enable compatibility mode for packages])
 AC_MSG_RESULT([$enable_compat_mode])
 
 AC_SUBST([COMPAT_MODE], [$enable_compat_mode])
+AS_IF([test "x$enable_compat_mode" = xyes],
+    [
+    AC_CONFIG_FILES([bin/gap.sh:cnf/compat/gap.sh.in], [chmod +x bin/gap.sh])
+    AC_CONFIG_FILES([sysinfo.gap:cnf/compat/sysinfo.gap.in])
+    AC_CONFIG_LINKS([bin/$GAPARCH/config.h:gen/config.h])
+    AC_CONFIG_LINKS([bin/$GAPARCH/src:src])
+    AS_IF([test "x$srcdir" = x.],
+        [
+            AC_MSG_NOTICE([in-tree build])
+        ],
+        [
+            AC_MSG_NOTICE([out-of-tree build])
+            # FIXME: the following config command works if invoked
+            # explicitly, but for some reason is not added to the list
+            # of automatic command
+            AC_CONFIG_COMMANDS([src/compiled.h],
+                [
+                echo "#include \"$ac_abs_top_srcdir/src/compiled.h\"" > src/compiled.h
+                ])
+        ])
+    ])
+
 
 
 dnl
@@ -154,38 +252,58 @@ dnl External dependencies
 dnl
 
 dnl Find GMP
+GMP_USE_BUILTIN=no
 AC_ARG_WITH([gmp],
   [AS_HELP_STRING([--with-gmp[=DIR]],  
                   [prefix of GMP installation. e.g. /usr/local or /usr])],
-  [GMP_PREFIX="$with_gmp"],
-  [AC_CHECK_LIB([gmp], [__gmpz_init],
-    [
-    GMP_USE_BUILTIN=no
-    if test "x$GMP_PREFIX" != x ; then
-      GMP_CPPFLAGS=" -I${GMP_PREFIX}/include"
-      GMP_LDFLAGS=" -L${GMP_PREFIX}/lib -lgmp"
-    else
-      GMP_CPPFLAGS=""
-      GMP_LDFLAGS="-lgmp"
-    fi
-    ],
-    [
-    AC_CONFIG_SUBDIRS([extern/gmp])
-    GMP_USE_BUILTIN=yes
-    GMP_PREFIX='${builddir}/extern/gmp'
-    GMP_CPPFLAGS=" -I${GMP_PREFIX}"
-    GMP_LDFLAGS=" -L${GMP_PREFIX} -lgmp"
-    AC_MSG_NOTICE([No usable GMP found, switching to included GMP])
-#     AC_MSG_ERROR([GNU Multiple Precision Arithmetic Library not found.
-#     Maybe you want to call configure with the --with-gmp=<path> option?
-#     This tells configure where to find the GMP library and headers.
-#     e.g. --with-gmp=/usr/local or --with-gmp=/usr])
-    ])]
-)
+  [
+    GMP_CPPFLAGS=" -I${with_gmp}/include"
+    GMP_LDFLAGS=" -L${with_gmp}/lib -lgmp"
+  ],
+  [
+    with_gmp=check
+    GMP_CPPFLAGS=""
+    GMP_LDFLAGS="-lgmp"
+  ])
+
+AS_IF([test x$with_gmp = xbuiltin],
+  # user explicitly requested to use builtin GMP?
+  [GMP_USE_BUILTIN=yes
+   AC_MSG_NOTICE([Using bundled GMP])
+  ],
+  # otherwise try to link against GMP
+  [
+    tmp_CPPFLAGS="$CPPFLAGS"
+    tmp_LDFLAGS="$LDFLAGS"
+    CPPFLAGS="$CPPFLAGS $GMP_CPPFLAGS"
+    LDFLAGS="$LDFLAGS $GMP_LDFLAGS"
+    AC_CHECK_LIB([gmp], [__gmpz_init],
+    [], # all is good
+    [AS_IF([test x$with_gmp = xcheck],
+      [GMP_USE_BUILTIN=yes
+       AC_MSG_NOTICE([No usable GMP found, switching to included GMP])
+      ],
+      [AC_MSG_ERROR([GMP not found at prefix $with_gmp])]
+      )
+    ])
+    CPPFLAGS="$tmp_CPPFLAGS"
+    LDFLAGS="$tmp_LDFLAGS"
+  ])
+
+AS_IF([test x$GMP_USE_BUILTIN = xyes],[
+  AC_CONFIG_SUBDIRS([extern/gmp])
+  GMP_USE_BUILTIN=yes
+  GMP_CPPFLAGS=' -I${builddir}/extern/gmp'
+  GMP_LDFLAGS=' ${builddir}/extern/gmp/libgmp.la'
+])
+
 AC_SUBST([GMP_USE_BUILTIN])
-AC_SUBST([GMP_PREFIX])
 AC_SUBST([GMP_CPPFLAGS])
 AC_SUBST([GMP_LDFLAGS])
+
+dnl Some packages check the USE_GMP flag; retain it for now to
+dnl allow these packages to work correctly for now. We should
+dnl remove this eventually.
 AC_DEFINE([USE_GMP], [1], [for backwards compatibility])
 
 
@@ -215,10 +333,10 @@ AS_IF([test "x$use_readline" = xyes],
      AC_DEFINE([HAVE_LIBREADLINE], [1],
                [Define if you have libreadline])
     ],
-    [if test "x$with_readline" != xcheck; then
+    [AS_IF([test "x$with_readline" != xcheck],[
        AC_MSG_FAILURE(
          [--with-readline was given, but test for readline failed])
-     fi
+     ])
     ]
 )
 AC_SUBST([READLINE_LDFLAGS])
@@ -262,9 +380,7 @@ AC_DEFINE([BOEHM_GC], [1], [Use Boehm garbage collector])
 # TODO: detect BOEHM GC and set flags suitably
 #  -> may want to build the one shipped with HPC-GAP,
 #  as that has special improvements for HPC-GAP
-if test "x$enable_hpcgap" = xyes ; then
-  BOEHM_LDFLAGS="-lgc"
-fi
+AS_IF([test "x$enable_hpcgap" = xyes],[BOEHM_LDFLAGS="-lgc"])
 AC_SUBST([BOEHM_CPPFLAGS])
 AC_SUBST([BOEHM_LDFLAGS])
 
@@ -296,10 +412,6 @@ case "$host_cpu" in
     AC_DEFINE([SPARC], [1], [define as 1 on SPARC architecture to flush register windows])
     SPARC=yes
     ;;
-  ia64* ) 
-    AC_DEFINE([ITANIUM], [1], [define as 1 on Itanium architecture to flush and mark register stack])
-    ITANIUM=yes
-    ;;
 esac
 
 case "$host_os" in
@@ -315,7 +427,6 @@ esac
 
 dnl Note: AC_DEFINE defines conditionals to be put in config.h, while
 dnl AM_CONDITIONAL defines conditionals for use in in Makefile.am
-AC_SUBST([ITANIUM], [$ITANIUM])
 AC_SUBST([SYS_IS_CYGWIN32], [$CYGWIN])
 SYS_IS_DARWIN=$DARWIN
 AC_SUBST([SYS_IS_DARWIN])
@@ -324,10 +435,6 @@ AC_SUBST([SYS_IS_DARWIN])
 dnl
 dnl check for the existence of various header files
 dnl
-
-# FIXME: needed?
-#AC_HEADER_STDC
-
 
 dnl check for stdint.h and the types int8_t, uint8_t etc. it defines
 AC_TYPE_INT8_T
@@ -352,7 +459,7 @@ AC_CHECK_HEADERS([fcntl.h termios.h termio.h sgtty.h])
 AC_CHECK_HEADERS([sys/ioctl.h sys/resource.h sys/stat.h sys/wait.h])
 
 # FIXME: get rid of the following (requires code changes!!!)
-AC_CHECK_HEADERS( assert.h errno.h math.h stdio.h stdlib.h string.h )
+AC_CHECK_HEADERS( assert.h errno.h )
 
 
 # Check for POSIX 98 pty APIs
@@ -406,7 +513,8 @@ dnl error handling
 AC_CHECK_HEADERS([errno.h])
 
 dnl check for timing functions
-AC_CHECK_FUNCS([times getrusage gettimeofday])
+AC_CHECK_HEADERS([time.h sys/time.h sys/times.h])
+AC_CHECK_FUNCS([times getrusage gettimeofday clock_gettime clock_getres])
 AC_CHECK_FUNCS([setitimer getitimer])
 AC_CHECK_LIB([rt], [timer_create])
 AC_CHECK_FUNCS([timer_settime timer_gettime timer_create])
@@ -442,32 +550,30 @@ AC_CHECK_FUNCS([log2 log10 log1p exp2 expm1 exp10 trunc])
 
 dnl sigsetjmp is a macro on some platforms, cannot use AC_CHECK_FUNCS
 AC_MSG_CHECKING([for sigsetjmp])
-AC_TRY_LINK([#include <setjmp.h>], [sigjmp_buf t; sigsetjmp(t, 0)],
+AC_LINK_IFELSE(
+  [AC_LANG_PROGRAM([[#include <setjmp.h>]],
+      [[sigjmp_buf t; sigsetjmp(t, 0)]])],
   [AC_MSG_RESULT([yes])
    AC_DEFINE([HAVE_SIGSETJMP], [1], [Define to 1 if you have the `sigsetjmp' function.])],
-  [AC_MSG_RESULT([no])]
-)
+  [AC_MSG_RESULT([no])])
 
 dnl _setjmp is a macro on some platforms, cannot use AC_CHECK_FUNCS
 AC_MSG_CHECKING([for _setjmp])
-AC_TRY_LINK([#include <setjmp.h>], [sigjmp_buf t; _setjmp(t, 0)],
+AC_LINK_IFELSE(
+  [AC_LANG_PROGRAM([[#include <setjmp.h>]],
+      [[sigjmp_buf t; _setjmp(t, 0)]])],
   [AC_MSG_RESULT([yes])
    AC_DEFINE([HAVE__SETJMP], [1], [Define to 1 if you have the `_setjmp' function.])],
-  [AC_MSG_RESULT([no])]
-)
-
-# for rusage and timers
-AC_CHECK_HEADERS( time.h sys/time.h sys/times.h )
-AC_CHECK_FUNCS( times getrusage gettimeofday clock_gettime clock_getres )
-AC_CHECK_FUNCS( setitimer getitimer)
-AC_CHECK_LIB( [rt], [timer_create])
-AC_CHECK_FUNCS( timer_settime timer_gettime timer_create )
-AC_CHECK_FUNCS( sys_timer_settime sys_timer_gettime sys_timer_create )
+  [AC_MSG_RESULT([no])])
 
 dnl pthreads
-if test "x$enable_hpcgap" = xyes ; then
+AS_IF([test "x$enable_hpcgap" = xyes],[
   AX_PTHREAD
-fi
+  ])
+
+AS_IF([test "x$enable_hpcgap" = xyes],[
+  AS_BOX([WARNING: Experimental HPC-GAP mode enabled])
+  ])
 
 
 dnl

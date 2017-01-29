@@ -1,25 +1,28 @@
+########################################################################
+#
 # Makefile rules for GAP, to be included from GNUmakefile.
 # Partially based on the git and ScummVM build systems.
 #
 # This requires GNU make!!! You have been warned.
+#
+########################################################################
 
-#######################################################################
+
+########################################################################
 # Default rule: build gap
-#######################################################################
+########################################################################
 all: gap$(EXEEXT)
 
 # Backwards compatibility: add "default" target as alias for "all"
 default: all
 
 
-
-#######################################################################
+########################################################################
 # Source files
 #
-# We avoid line continuations, instead use repeatedly "SOURCES+=". While
-# this may look somewhat more cumbersome, it is more flexible, as it
-# becomes trivial to comment out lines, or to insert conditionals.
-#######################################################################
+# We avoid line continuations, instead use repeatedly "SOURCES+=". This
+# makes it trivial to comment out lines, or to insert conditionals.
+########################################################################
 SOURCES =
 SOURCES += src/ariths.c
 SOURCES += src/backtrace.c
@@ -43,10 +46,11 @@ SOURCES += src/ffdata.c
 SOURCES += src/finfield.c
 SOURCES += src/funcs.c
 SOURCES += src/gap.c
-SOURCES += src/gap_version.c
+SOURCES += gen/gap_version.c	# generated source file
 SOURCES += src/gasman.c
-ifneq ($(HPCGAP),yes)
-# FIXME: HPC-GAP and src/globalstate.c are currently not yet compatible
+ifeq ($(HPCGAP),no)
+# FIXME: HPC-GAP and src/globalstate.c are not yet compatible; need to "merge"
+# struct GlobalState with ThreadLocalStorage from hpc/tls.h
 SOURCES += src/globalstate.c
 endif
 SOURCES += src/gmpints.c
@@ -107,13 +111,14 @@ ifeq ($(HPCGAP),yes)
 endif
 
 
-#######################################################################
-# Preprocessor flags
-#######################################################################
+########################################################################
+# Preprocessor flags: defines
+########################################################################
 
-# Add DEFS (from autoconf, contains -Dfoo flags) and flags for GMP
+# Add DEFS (from autoconf, contains -D flags) and flags for GMP
 CPPFLAGS += $(DEFS) $(GMP_CPPFLAGS)
 
+# Add HPC-GAP specific flacks if necessary
 ifeq ($(HPCGAP),yes)
 CPPFLAGS += $(BOEHM_CPPFLAGS) $(LIBATOMIC_OPS_CPPFLAGS)
 endif
@@ -128,38 +133,35 @@ else
 CPPFLAGS += "-DSYS_DEFAULT_PATHS=\"$(abs_top_srcdir)\""
 endif
 
-# Setup include paths. Note: our code usually says #include "foo.h",
-# but there are instances where it says #include "src/foo.h". Therefore,
-# the following include paths come in pairs.
 
-# FIXME: some code also looks for "serialize.h" when it should be
-# looking for "hpc/serialize.h", hence we add a third variant of those
-# paths. This should eventually be resolved by modifying the code in
-# question to properly add the hpc/ prefix to the include header name.
+########################################################################
+# Preprocessor flags: include paths
+########################################################################
 
-# Include paths: look first in build_dir/src, so the correct config.h is used
-CPPFLAGS += -I$(top_builddir)/src -I$(top_builddir)
+# First add the builddir, so that the correct gen/config.h is picked up (even
+# if this is an out-of-tree build dir, and the user also has an in-tree build)
+CPPFLAGS += -I$(top_builddir)
 
 ifeq ($(HPCGAP),yes)
-  # Prefer headers from hpcgap/src/ over those in src/.
-  CPPFLAGS += -I$(srcdir)/hpcgap/src -I$(srcdir)/hpcgap/src/hpc -I$(srcdir)/hpcgap
+  # Prefer headers from hpcgap/src/ over those in src/
+  CPPFLAGS += -I$(srcdir)/hpcgap
 endif
 
-# Finally look into src
-CPPFLAGS += -I$(srcdir)/src -I$(srcdir)/src/hpc -I$(srcdir)
+# Finally look into srcdir
+CPPFLAGS += -I$(srcdir)
 
 
-#######################################################################
+########################################################################
 # Compiler flags
-#######################################################################
+########################################################################
 ifeq ($(HPCGAP),yes)
 CFLAGS += $(PTHREAD_CFLAGS)
 endif
 
 
-#######################################################################
+########################################################################
 # Linker flags
-#######################################################################
+########################################################################
 LDFLAGS += $(GMP_LDFLAGS) $(READLINE_LDFLAGS)
 
 ifeq ($(HPCGAP),yes)
@@ -168,83 +170,176 @@ LDFLAGS += $(PTHREAD_CFLAGS) $(PTHREAD_LIBS)
 endif
 
 
-#######################################################################
+########################################################################
 # HPC-GAP: transform code using ward
 #
-# That is, we want to use ward as a preprocessor before invoking the C
-# compiler. Moreover, some source files come in two versions: One which
-# is located in src/ as usual, and another in hpcgap/src, which is to be
-# used instead when building in HPC-GAP mode.
+# For HPC-GAP, we must use ward as a preprocessor before invoking the C
+# compiler. Moreover, some source files come in two versions: One which is
+# located in src/, and another in hpcgap/src/, which is to be used instead
+# when building in HPC-GAP mode.
 #
-# The following build rules achieve this
-#######################################################################
+# The following build rules achieve this.
+########################################################################
 ifeq ($(HPCGAP),yes)
 
-# Use sources generated by ward
+# Compute new list of sources from ORIGINAL_SOURCES, by replacing src/ with gen/
 ORIGINAL_SOURCES := $(SOURCES)
-SOURCES := $(addprefix $(top_builddir)/gen/, $(ORIGINAL_SOURCES))
+SOURCES := $(patsubst src/%,gen/%,$(ORIGINAL_SOURCES))
 
-# determine which sources have a version in "hpcgap/src".
+# Determine which sources have a version in "hpcgap/src".
 # This uses the fact that "wildcard" only returns paths which refer
 # to existing files.
-HPCGAP_SOURCES := $(subst $(srcdir)/hpcgap/,,$(wildcard $(addprefix $(srcdir)/hpcgap/,$(ORIGINAL_SOURCES))))
+HPCGAP_SOURCES := $(wildcard $(addprefix $(srcdir)/hpcgap/,$(ORIGINAL_SOURCES)))
+HPCGAP_SOURCES := $(subst $(srcdir)/hpcgap/src/,,$(HPCGAP_SOURCES))
+HPCGAP_SOURCES := $(addprefix gen/,$(HPCGAP_SOURCES))
 
 # static pattern rule for sources with an HPCGAP-version
-$(addprefix gen/,$(HPCGAP_SOURCES)): gen/src/%.c: hpcgap/src/%.c
-	@mkdir -p $(dir $@)
+# (note that ward needs to parse the sources, hence gen/config.h must already be made)
+$(HPCGAP_SOURCES): gen/%.c: hpcgap/src/%.c gen/config.h
+	@$(MKDIR_P) $(@D)
 	$(QUIET_WARD) WARD=$(WARD) ADDGUARDS=$(ADDGUARDS) $(srcdir)/cnf/addguards $@ $< $(CPPFLAGS)
 
 # static pattern rule for sources without an HPCGAP-version
-gen/src/%.c: src/%.c
-	@mkdir -p $(dir $@)
+# (note that ward needs to parse the sources, hence gen/config.h must already be made)
+gen/%.c: src/%.c gen/config.h
+	@$(MKDIR_P) $(@D)
 	$(QUIET_WARD) WARD=$(WARD) ADDGUARDS=$(ADDGUARDS) $(srcdir)/cnf/addguards $@ $< $(CPPFLAGS)
 
-# normally, GNU make deletes intermediate build files, such as the gen/src/*.c
+# Normally, GNU make deletes intermediate build files, such as the gen/*.c
 # files generated by ward. We do not want this for various reasons (performance
-# being one of them), so tell GNU make accordingly:
+# being one of them), so we tell GNU make accordingly:
 .SECONDARY: $(SOURCES)
-
-# make clean should remove the files generated by ward
-clean-ward:
-	rm -rf $(top_builddir)/gen/
-clean: clean-ward
 
 endif # end of HPCGAP specific code
 
 
-#######################################################################
+########################################################################
+# Object files
+########################################################################
+
+# OBJS shall contain the names of all object files that constitute GAP.
+# So turn all src/*.c and gen/*.c file names in SOURCES into obj/*.lo
+OBJS = $(patsubst gen/%.c,obj/%.lo,$(patsubst src/%.c,obj/%.lo,$(SOURCES)))
+
+# ensure config.h is built before the compilers gets invoked
+$(OBJS): gen/config.h
+
+
+########################################################################
+# Quiet rules.
 #
-#######################################################################
+# Replace regular output with quiet messages, unless V is set,
+# e.g. "make V=1"
+########################################################################
+ifneq ($(findstring $(MAKEFLAGS),s),s)
+ifndef V
+QUIET_CC      = @echo '   C       ' $@;
+QUIET_AS      = @echo '   AS      ' $@;
+QUIET_AR      = @echo '   AR      ' $@;
+QUIET_RANLIB  = @echo '   RANLIB  ' $@;
+QUIET_LINK    = @echo '   LINK    ' $@;
+QUIET_WARD    = @echo '   WARD    ' $@;
+QUIET_SED     = @echo '   SED     ' $@;
+QUIET         = @
+LIBTOOL 	 += --silent
+endif
+endif
 
-# the names of all object files
-OBJS = $(SOURCES:.c=.o)
 
-# all sources implicitly depend on config.h
-$(OBJS): src/config.h
+########################################################################
+# Rules for automatic header dependency tracking.
+#
+# This is somewhat similar to what automake does, but relies on compiler
+# support. The result is much simpler.
+#
+# So, here is what happens: In each directory containing source files,
+# a ".deps" subdirectory is created. We then instruct the compiler via
+# some flags to create a ".deps/FOO.d" file when it compiles "FOO.c".
+# This file encodes the header dependencies of "FOO.c" in a way that
+# make can read (i.e. simply as a bunch of make targets with
+# dependencies).
+#
+# Finally, to let make track the header dependencies, we include the *.d files.
+########################################################################
+
+# DEPDIR is the subdirectory in which the generated dependencies are stored.
+DEPDIR := .deps
+
+# List of all dependency directories. For now, we hardcode this list.
+# In the future, we could derive this from the value of the SOURCES variable.
+DEPDIRS = obj/$(DEPDIR) gen/$(DEPDIR)
+
+# Include the dependency tracking files.
+-include $(wildcard $(addsuffix /*.d,$(DEPDIRS)))
+
+# Mark *.d files as PHONY. This stops make from trying to
+# recreate them (which it can't), and in particular from looking for potential
+# source files. This can save quite a bit of disk access time.
+.PHONY: $(wildcard $(addsuffix /*.d,$(DEPDIRS)))
+
+# The following flags instruct the compiler to enable advanced
+# dependency tracking. Supported by GCC 3 and newer; clang; Intel C
+# compiler; and more.
+#
+# TODO: use configure to compute CC_UPDATE_DEP_FLAG, so that we can
+# disable it for compilers that don't support it, resp. replace it
+# something that works for that compiler
+CC_UPDATE_DEP_FLAG = -MMD -MF "$(@D)/$(DEPDIR)/$(*F).d" -MQ "$@" -MP
+
+
+########################################################################
+# Compiler rules
+########################################################################
+
+COMPILE=$(LIBTOOL) --mode=compile $(CC)
+
+# Build rule for C source files
+# Disabled for HPC-GAP, to ensure we always use the output of ward
+# and not the original source files
+ifeq ($(HPCGAP),no)
+obj/%.lo: src/%.c
+	@$(MKDIR_P) $(@D)/$(DEPDIR)
+	$(QUIET_CC)$(COMPILE) $(CC_UPDATE_DEP_FLAG) $(CFLAGS) $(CC_EXTRA_FLAGS) $(CPPFLAGS) -c $< -o $@
+endif
+
+# Build rule for generated C source files
+obj/%.lo: gen/%.c
+	@$(MKDIR_P) $(@D)/$(DEPDIR)
+	$(QUIET_CC)$(COMPILE) $(CC_UPDATE_DEP_FLAG) $(CFLAGS) $(CC_EXTRA_FLAGS) $(CPPFLAGS) -c $< -o $@
+
+
+########################################################################
+# Linker rules for gap executable
+########################################################################
+
+LINK=$(LIBTOOL) --mode=link $(CC) -export-dynamic
 
 ifeq ($(SYS_IS_CYGWIN32),yes)
 
-# Rename GAP's standard main function
-src/gap.o: CC_EXTRA_FLAGS := -DCOMPILECYGWINDLL
+# Special build rules for CYGWIN / Windows: In order to allow kernel
+# extensions, we employ a trick: GAP itself is compiled into DLL, in which 
+# GAP's standard main function is renamed. And gap.exe is a tiny binary which
+# loads that DLL and calls the renamed main function.
+src/gap.lo: CC_EXTRA_FLAGS := -DCOMPILECYGWINDLL
 gap.dll: $(OBJS)
-	$(QUIET_LINK)$(CC) $(LDFLAGS) -shared $(OBJS) $(LDFLAGS) $(LIBS) -o $@
+	$(QUIET_LINK)$(LINK) $(LDFLAGS) -shared $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 gap$(EXEEXT): gap.dll
-	$(QUIET_LINK)$(CC) $(LDFLAGS) src/gapw95.c $(LIBS) gap.dll -o $@
+	$(QUIET_LINK)$(LINK) $(LDFLAGS) src/gapw95.c $(LIBS) gap.dll -o $@
 	@( if which peflags > /dev/null ; then peflags --cygwin-heap=2048 gap$(EXEEXT) ; fi )
 
 else
 
 # Linking rule and dependencies for the main gap executable
 gap$(EXEEXT): $(OBJS)
-	$(QUIET_LINK)$(CC) $(OBJS) $(LDFLAGS) $(LIBS) -o $@
+	$(QUIET_LINK)$(LINK) $(OBJS) $(LDFLAGS) $(LIBS) -o $@
 
 endif
 
 
-#
+########################################################################
 # The "docomp" target regenerates the various src/c_*.c files, and
 # replaces the old "etc/docomp" script.
-#
+########################################################################
 ifeq ($(HPCGAP),yes)
 DOCOMP_PREFIX=$(abs_top_srcdir)/hpcgap
 else
@@ -256,56 +351,75 @@ docomp: #gap$(EXEEXT)
 	done
 
 
-# TODO: build gac
-# TODO: create sysinfo.gap files for backwards compatibility
-# TODO: create fake bin/FOOBAR/ subdirectory, for backwards compatibility
-# TODO: implement "strip" rule?!?
-# TODO: re-implement cygwin specifics
-# TODO: allow bundling GMP, gc, libatomic_ops again, i.e. by providing
-#       code that builds this bundled software????
-# TODO: same question about zeromq...?
-
+########################################################################
+# Rules for 'make clean'
+########################################################################
 distclean: clean
-	rm -f src/config.h config.log config.status
+	rm -f gen/config.h config.log config.status
 
 clean:
+	rm -rf gen obj
 	rm -f $(OBJS) gap$(EXEEXT)
 
-######################################################################
+
+########################################################################
 # Building subprojects
-######################################################################
+########################################################################
 
 ifeq ($(GMP_USE_BUILTIN),yes)
 gap$(EXEEXT): gmp
 gmp:
-	$(MAKE) -C $(GMP_PREFIX) -s
+	$(MAKE) -C extern/gmp -s
 
-$(OBJS): $(GMP_PREFIX)/gmp.h
-$(GMP_PREFIX)/gmp.h:
-	$(MAKE) -C $(GMP_PREFIX) -s gmp.h
+$(OBJS): extern/gmp/gmp.h
+extern/gmp/gmp.h:
+	$(MAKE) -C extern/gmp -s gmp.h
 
 clean: clean-gmp
 clean-gmp:
-	$(MAKE) -C $(GMP_PREFIX) -s clean
+	$(MAKE) -C extern/gmp -s clean
 
 check: check-gmp
 check-gmp:
-	$(MAKE) -C $(GMP_PREFIX) -s check
+	$(MAKE) -C extern/gmp -s check
 
 .PHONY: gmp clean-gmp check-gmp
 
 endif
 
-######################################################################
+
+########################################################################
+# Compatibility mode
+#
+# If enabled, we prepare the environment to look like it did with
+# the old build system, thus enabling existing packages with kernel
+# extensions to be compiled against this version of GAP/
+########################################################################
+ifeq ($(COMPAT_MODE),yes)
+
+# regenerate sysinfo.gap if necessary
+all: sysinfo.gap
+sysinfo.gap: $(srcdir)/cnf/compat/sysinfo.gap.in config.status
+	$(SHELL) ./config.status $@
+
+# regenerate bin/gap.sh if necessary
+all: bin/gap.sh
+bin/gap.sh: $(srcdir)/cnf/compat/gap.sh.in config.status
+	$(SHELL) ./config.status $@
+
+endif
+
+
+########################################################################
 # Documentation rules
-######################################################################
+########################################################################
 
 # Alias for backwards compatibility
 manuals: doc
 
 GAPARGS=
-TESTGAP = $(abs_top_builddir)/gap$(EXEEXT) -b -m 100m -o 1g -A -q -x 80 -r $(GAPARGS)
-TESTGAPauto = $(abs_top_builddir)/gap$(EXEEXT) -b -m 100m -o 1g -q -x 80 -r $(GAPARGS)
+TESTGAP = ./gap$(EXEEXT) -b -m 100m -o 1g -A -q -x 80 -r $(GAPARGS)
+TESTGAPauto = ./gap$(EXEEXT) -b -m 100m -o 1g -q -x 80 -r $(GAPARGS)
 
 # TODO: when in HPCGAP mode, we should perhaps instead
 # compile the documentation in the hpcgap dir?
@@ -343,9 +457,9 @@ clean-doc:
 
 .PHONY: doc clean-doc manuals
 
-######################################################################
+########################################################################
 # Bootstrap rules
-######################################################################
+########################################################################
 
 PKG_BOOTSTRAP_URL="https://www.gap-system.org/pub/gap/gap4pkgs/"
 PKG_MINIMAL="bootstrap-pkg-minimal.tar.gz"
@@ -373,93 +487,15 @@ bootstrap-pkg-full:
 
 .PHONY: bootstrap-pkg-minimal bootstrap-pkg-full
 
-######################################################################
+########################################################################
 # Test runner rules
-######################################################################
+########################################################################
 
 # TODO
 
 
 
-######################################################################
-# The low-level build rules follow - normally you should have no need to
-# touch whatever comes after here.
-######################################################################
-
-# Replace regular output with quiet messages (unless V is set, e.g. "make V=1")
-ifneq ($(findstring $(MAKEFLAGS),s),s)
-ifndef V
-QUIET_CC      = @echo '   C       ' $@;
-QUIET_AS      = @echo '   AS      ' $@;
-QUIET_AR      = @echo '   AR      ' $@;
-QUIET_RANLIB  = @echo '   RANLIB  ' $@;
-QUIET_LINK    = @echo '   LINK    ' $@;
-QUIET_WARD    = @echo '   WARD    ' $@;
-QUIET_SED     = @echo '   SED     ' $@;
-QUIET         = @
-endif
-endif
-
-
-# Rules for automatic header dependency tracking.
-# This is somewhat similar to what automake does, but relies
-# on compiler support. The result is much simpler.
-#
-# So, here is what happens: In each directory containing source files,
-# a ".deps" subdirectory is created. We then instruct the C compiler
-# via special compiler flags to create a ".deps/FOO.d" file when it
-# compiles "FOO.c". This file encodes the header dependencies
-# of "FOO.c" in a way that make can read (i.e. simply as a bunch
-# of make targets with dependencies).
-#
-# We then include those *.d files into this Makefile, and presto,
-# we have implemented dependency tracking.
-
-# The name used for .deps subdirectories. This is mostly here to
-# help ensure we use the same name consistently (i.e. to avoid typos)
-DEPDIR := .deps
-
-# List of all dependency directories. For now, we hardcode this list.
-# In the future, we could derive this from the value of the SOURCES variable.
-DEPDIRS = src/$(DEPDIR) gen/src/$(DEPDIR)
-
-# Include the dependency tracking files.
--include $(wildcard $(addsuffix /*.d,$(DEPDIRS)))
-
-# Mark *.d files as PHONY. This stops make from trying to
-# recreate them (which it can't), and in particular from looking for potential
-# source files. This can save quite a bit of disk access time.
-.PHONY: $(wildcard $(addsuffix /*.d,$(DEPDIRS)))
-
-# Ensure "make clean" removes dep files
-clean-deps:
-	rm -rf $(DEPDIRS)
-clean: clean-deps
-
-.PHONY: clean-deps
-
-
-# The following flags instruct the compiler to enable advanced
-# dependency tracking. Supported by GCC 3 and newer; clang; Intel C
-# compiler; and more.
-#
-# TODO: use configure to compute CC_UPDATE_DEP_FLAG, so that we can
-# disable it for compilers that don't support it, resp. replace it
-# something that works for that compiler
-CC_UPDATE_DEP_FLAG = -MMD -MF "$(*D)/$(DEPDIR)/$(*F).d" -MQ "$@" -MP
-
-
-# Build rule for C files
-%.o: %.c
-	@$(MKDIR_P) $(*D)/$(DEPDIR)
-	$(QUIET_CC)$(CC) $(CC_UPDATE_DEP_FLAG) $(CFLAGS) $(CC_EXTRA_FLAGS) $(CPPFLAGS) -c $< -o $@
-
-# Build rule for assembler files
-%.o: %.s
-	$(QUIET_AS)$(AS) $(ASFLAGS) $< -o $@
-
-
-######################################################################
+########################################################################
 # Handle version information
 #
 # The approach we use is based on what git.git does. It stores the
@@ -467,7 +503,7 @@ CC_UPDATE_DEP_FLAG = -MMD -MF "$(*D)/$(DEPDIR)/$(*F).d" -MQ "$@" -MP
 # it possible to cleverly handle rebuilding files that use the version.
 # It also makes it possible to use version in non-C-code later one,
 # should we need to.
-######################################################################
+########################################################################
 
 GVF = $(srcdir)/cnf/GAP-VERSION-FILE
 
@@ -476,23 +512,23 @@ $(GVF): FORCE
 	@cd $(top_srcdir) && $(SHELL) cnf/GAP-VERSION-GEN
 -include $(GVF)
 
-# generate src/gap_version.c
-src/gap_version.c: $(top_srcdir)/src/gap_version.c.in $(GVF)
+# generate gen/gap_version.c
+gen/gap_version.c: $(top_srcdir)/src/gap_version.c.in $(GVF)
 	$(QUIET_SED)sed -e "s/@GAP_VERSION@/$(GAP_VERSION)/" < $< > $@
 
 
-######################################################################
+########################################################################
 # Regenerate parts of the build system as needed.
 # The following is based in parts on the corresponding automake rules,
 # and in parts on an example in the autoconf manual.
-######################################################################
+########################################################################
 
 ACLOCAL_M4 =
 #ACLOCAL_M4 = $(top_srcdir)/cnf/aclocal.m4
 aclocal_m4_deps = $(top_srcdir)/configure.ac
 configure_deps = $(top_srcdir)/configure.ac $(CONFIGURE_DEPENDENCIES) $(ACLOCAL_M4)
 
-$(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
+config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	$(SHELL) ./config.status --recheck
 
 $(top_srcdir)/configure: $(configure_deps)
@@ -500,28 +536,27 @@ $(top_srcdir)/configure: $(configure_deps)
 #$(ACLOCAL_M4): $(top_srcdir)/configure.ac $(wildcard $(srcdir)/cnf/m4/*.m4)
 #	cd $(srcdir) && $(ACLOCAL) -I cnf/m4
 
-src/config.h: stamp-h
-	@if test ! -f $@; then rm -f stamp-h; else :; fi
-	@if test ! -f $@; then $(MAKE) stamp-h; else :; fi
+gen/config.h: gen/stamp-h
+	@if test ! -f $@; then rm -f gen/stamp-h; else :; fi
+	@if test ! -f $@; then $(MAKE) gen/stamp-h; else :; fi
 
-stamp-h: $(srcdir)/src/config.h.in $(top_builddir)/config.status
-	@rm -f stamp-h
-	cd $(top_builddir) && $(SHELL) ./config.status src/config.h
+gen/stamp-h: $(srcdir)/src/config.h.in config.status
+	@rm -f gen/stamp-h
+	$(SHELL) ./config.status gen/config.h
 	echo > $@
 
 $(srcdir)/src/config.h.in: $(configure_deps) 
 	cd $(top_srcdir) && autoheader
-	rm -f stamp-h
+	rm -f gen/stamp-h
 	touch $@
 
-GNUmakefile: $(srcdir)/GNUmakefile.in $(top_builddir)/config.status
-	cd $(top_builddir) && $(SHELL) ./config.status GNUmakefile
+GNUmakefile: $(srcdir)/GNUmakefile.in config.status
+	$(SHELL) ./config.status $@
 
 
-
-######################################################################
+########################################################################
 # All .PHONY targets
-######################################################################
+########################################################################
 
 .PHONY: all clean distclean check docomp
 
