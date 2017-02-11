@@ -355,11 +355,13 @@ docomp: #gap$(EXEEXT)
 # Rules for 'make clean'
 ########################################################################
 distclean: clean
-	rm -f gen/config.h config.log config.status
+	rm -f config.log config.status libtool stamp-h GNUmakefile
+	rm -f bin/gap.sh sysinfo.gap
+	rm -rf gen obj
 
 clean:
-	rm -rf gen obj
-	rm -f $(OBJS) gap$(EXEEXT)
+	rm -f obj/*
+	rm -f gap$(EXEEXT) gac
 
 
 ########################################################################
