@@ -216,6 +216,12 @@ gen/%.c: src/%.c gen/config.h
 endif # end of HPCGAP specific code
 
 
+# instruct GNU make to delete output files of failed build rules,
+# so that if Ward errors out, any incomplete generated files are
+# deleted.
+.DELETE_ON_ERROR:
+
+
 ########################################################################
 # Object files
 ########################################################################
