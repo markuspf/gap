@@ -530,6 +530,7 @@ $(GVF): FORCE
 
 # generate gen/gap_version.c
 gen/gap_version.c: $(top_srcdir)/src/gap_version.c.in $(GVF)
+	@$(MKDIR_P) $(@D)
 	$(QUIET_SED)sed -e "s/@GAP_VERSION@/$(GAP_VERSION)/" < $< > $@
 
 
