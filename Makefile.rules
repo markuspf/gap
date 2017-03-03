@@ -366,10 +366,10 @@ docomp: #gap$(EXEEXT)
 distclean: clean
 	rm -f config.log config.status libtool stamp-h GNUmakefile
 	rm -f bin/gap.sh sysinfo.gap
-	rm -rf gen obj
+	rm -rf gen
 
 clean:
-	rm -f obj/*
+	rm -rf obj
 	rm -f gap$(EXEEXT) gac
 
 
