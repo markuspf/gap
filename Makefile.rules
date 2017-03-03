@@ -199,13 +199,15 @@ HPCGAP_SOURCES := $(addprefix gen/,$(HPCGAP_SOURCES))
 # static pattern rule for sources with an HPCGAP-version
 # (note that ward needs to parse the sources, hence gen/config.h must already be made)
 $(HPCGAP_SOURCES): gen/%.c: hpcgap/src/%.c gen/config.h
-	@$(MKDIR_P) $(@D)
+	@$(MKDIR_P) $(@D)/$(DEPDIRNAME)
+	@echo "$@: $<\n$<:" > $(DEPFILE)
 	$(QUIET_WARD) $(ADDGUARDS2) -cpp $(CPPFLAGS) -- $< > $@
 
 # static pattern rule for sources without an HPCGAP-version
 # (note that ward needs to parse the sources, hence gen/config.h must already be made)
 gen/%.c: src/%.c gen/config.h
-	@$(MKDIR_P) $(@D)
+	@$(MKDIR_P) $(@D)/$(DEPDIRNAME)
+	@echo "$@: $<\n$<:" > $(DEPFILE)
 	$(QUIET_WARD) $(ADDGUARDS2) -cpp $(CPPFLAGS) -- $< > $@
 
 # Normally, GNU make deletes intermediate build files, such as the gen/*.c
@@ -291,6 +293,8 @@ DEPDIRS = $(addsuffix /$(DEPDIRNAME),obj obj/hpc gen gen/hpc)
 # source files. This can save quite a bit of disk access time.
 .PHONY: $(wildcard $(addsuffix /*.d,$(DEPDIRS)))
 
+DEPFILE = "$(@D)/$(DEPDIRNAME)/$(*F).d"
+
 # The following flags instruct the compiler to enable advanced
 # dependency tracking. Supported by GCC 3 and newer; clang; Intel C
 # compiler; and more.
@@ -298,7 +302,7 @@ DEPDIRS = $(addsuffix /$(DEPDIRNAME),obj obj/hpc gen gen/hpc)
 # TODO: use configure to compute DEPFLAGS, so that we can
 # disable it for compilers that don't support it, resp. replace it
 # something that works for that compiler
-DEPFLAGS = -MQ "$@" -MMD -MP -MF "$(@D)/$(DEPDIRNAME)/$(*F).d"
+DEPFLAGS = -MQ "$@" -MMD -MP -MF $(DEPFILE)
 
 
 ########################################################################
