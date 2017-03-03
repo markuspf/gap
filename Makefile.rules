@@ -276,7 +276,7 @@ DEPDIR := .deps
 
 # List of all dependency directories. For now, we hardcode this list.
 # In the future, we could derive this from the value of the SOURCES variable.
-DEPDIRS = obj/$(DEPDIR) gen/$(DEPDIR)
+DEPDIRS = $(addsuffix /$(DEPDIR),obj obj/hpc gen gen/hpc)
 
 # Include the dependency tracking files.
 -include $(wildcard $(addsuffix /*.d,$(DEPDIRS)))
