@@ -244,13 +244,10 @@ $(OBJS): gen/config.h
 ########################################################################
 ifneq ($(findstring $(MAKEFLAGS),s),s)
 ifndef V
-QUIET_CC      = @echo '   C       ' $@;
-QUIET_AS      = @echo '   AS      ' $@;
-QUIET_AR      = @echo '   AR      ' $@;
-QUIET_RANLIB  = @echo '   RANLIB  ' $@;
-QUIET_LINK    = @echo '   LINK    ' $@;
-QUIET_WARD    = @echo '   WARD    ' $@;
-QUIET_SED     = @echo '   SED     ' $@;
+QUIET_CC      = @echo "   C       $< => $@";
+QUIET_LINK    = @echo "   LINK    $@";
+QUIET_WARD    = @echo "   WARD    $< => $@";
+QUIET_SED     = @echo "   SED     $< => $@";
 QUIET         = @
 LIBTOOL 	 += --silent
 endif
