@@ -269,14 +269,19 @@ endif
 # dependencies).
 #
 # Finally, to let make track the header dependencies, we include the *.d files.
+#
+# For a more detailed explanation of a very similar scheme, read this:
+# http://make.mad-scientist.net/papers/advanced-auto-dependency-generation/
+#
 ########################################################################
 
-# DEPDIR is the subdirectory in which the generated dependencies are stored.
-DEPDIR := .deps
+# Name of subdirectories in which the generated dependencies are stored.
+DEPDIRNAME := .deps
 
 # List of all dependency directories. For now, we hardcode this list.
-# In the future, we could derive this from the value of the SOURCES variable.
-DEPDIRS = $(addsuffix /$(DEPDIR),obj obj/hpc gen gen/hpc)
+# TODO: derive this from the value of the SOURCES variable, so that
+#       adding new src/ subdirectories works
+DEPDIRS = $(addsuffix /$(DEPDIRNAME),obj obj/hpc gen gen/hpc)
 
 # Include the dependency tracking files.
 -include $(wildcard $(addsuffix /*.d,$(DEPDIRS)))
@@ -290,10 +295,10 @@ DEPDIRS = $(addsuffix /$(DEPDIR),obj obj/hpc gen gen/hpc)
 # dependency tracking. Supported by GCC 3 and newer; clang; Intel C
 # compiler; and more.
 #
-# TODO: use configure to compute CC_UPDATE_DEP_FLAG, so that we can
+# TODO: use configure to compute DEPFLAGS, so that we can
 # disable it for compilers that don't support it, resp. replace it
 # something that works for that compiler
-CC_UPDATE_DEP_FLAG = -MMD -MF "$(@D)/$(DEPDIR)/$(*F).d" -MQ "$@" -MP
+DEPFLAGS = -MQ "$@" -MMD -MP -MF "$(@D)/$(DEPDIRNAME)/$(*F).d"
 
 
 ########################################################################
@@ -307,14 +312,14 @@ COMPILE=$(LIBTOOL) --mode=compile $(CC)
 # and not the original source files
 ifeq ($(HPCGAP),no)
 obj/%.lo: src/%.c
-	@$(MKDIR_P) $(@D)/$(DEPDIR)
-	$(QUIET_CC)$(COMPILE) $(CC_UPDATE_DEP_FLAG) $(CFLAGS) $(CC_EXTRA_FLAGS) $(CPPFLAGS) -c $< -o $@
+	@$(MKDIR_P) $(@D)/$(DEPDIRNAME)
+	$(QUIET_CC)$(COMPILE) $(DEPFLAGS) $(CFLAGS) $(CC_EXTRA_FLAGS) $(CPPFLAGS) -c $< -o $@
 endif
 
 # Build rule for generated C source files
 obj/%.lo: gen/%.c
-	@$(MKDIR_P) $(@D)/$(DEPDIR)
-	$(QUIET_CC)$(COMPILE) $(CC_UPDATE_DEP_FLAG) $(CFLAGS) $(CC_EXTRA_FLAGS) $(CPPFLAGS) -c $< -o $@
+	@$(MKDIR_P) $(@D)/$(DEPDIRNAME)
+	$(QUIET_CC)$(COMPILE) $(DEPFLAGS) $(CFLAGS) $(CC_EXTRA_FLAGS) $(CPPFLAGS) -c $< -o $@
 
 
 ########################################################################
