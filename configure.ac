@@ -20,7 +20,7 @@ AC_CANONICAL_HOST
 dnl
 dnl Set the language
 dnl
-AC_PROG_CC
+AC_PROG_CC_C99
 AC_LANG([C])
 
 
