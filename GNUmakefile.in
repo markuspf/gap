@@ -16,8 +16,6 @@ ABI = @ABI@
 
 # HPC-GAP specific
 HPCGAP = @HPCGAP@
-WARD = @WARD@
-ADDGUARDS = @ADDGUARDS@
 ADDGUARDS2 = @ADDGUARDS2@
 
 # compatibility mode

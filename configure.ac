@@ -359,12 +359,6 @@ AS_IF([test "x$enable_hpcgap" = xyes],
         [WARD_PATH="$with_ward/bin"],
         [WARD_PATH="$srcdir/hpcgap/ward/bin:ward/bin:../ward/bin:$PATH"]
         )
-  AC_PATH_PROG([WARD], [ward], [], [$WARD_PATH])
-  AS_IF([test "x$WARD" = x], AC_MSG_ERROR([could not locate ward]))
-
-  AC_PATH_PROG([ADDGUARDS], [addguards], [], [$WARD_PATH])
-  AS_IF([test "x$ADDGUARDS" = x], AC_MSG_ERROR([could not locate addguards]))
-
   AC_PATH_PROG([ADDGUARDS2], [addguards2], [], [$WARD_PATH])
   AS_IF([test "x$ADDGUARDS2" = x], AC_MSG_ERROR([could not locate addguards2]))
 
