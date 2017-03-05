@@ -252,7 +252,7 @@ dnl External dependencies
 dnl
 
 dnl Find GMP
-GMP_USE_BUILTIN=no
+BUILD_GMP=no
 AC_ARG_WITH([gmp],
   [AS_HELP_STRING([--with-gmp[=DIR]],  
                   [prefix of GMP installation. e.g. /usr/local or /usr])],
@@ -268,7 +268,7 @@ AC_ARG_WITH([gmp],
 
 AS_IF([test x$with_gmp = xbuiltin],
   # user explicitly requested to use builtin GMP?
-  [GMP_USE_BUILTIN=yes
+  [BUILD_GMP=yes
    AC_MSG_NOTICE([Using bundled GMP])
   ],
   # otherwise try to link against GMP
@@ -280,7 +280,7 @@ AS_IF([test x$with_gmp = xbuiltin],
     AC_CHECK_LIB([gmp], [__gmpz_init],
     [], # all is good
     [AS_IF([test x$with_gmp = xcheck],
-      [GMP_USE_BUILTIN=yes
+      [BUILD_GMP=yes
        AC_MSG_NOTICE([No usable GMP found, switching to included GMP])
       ],
       [AC_MSG_ERROR([GMP not found at prefix $with_gmp])]
@@ -290,14 +290,13 @@ AS_IF([test x$with_gmp = xbuiltin],
     LDFLAGS="$tmp_LDFLAGS"
   ])
 
-AS_IF([test x$GMP_USE_BUILTIN = xyes],[
-  AC_CONFIG_SUBDIRS([extern/gmp])
-  GMP_USE_BUILTIN=yes
-  GMP_CPPFLAGS=' -I${builddir}/extern/gmp'
-  GMP_LDFLAGS=' ${builddir}/extern/gmp/libgmp.la'
+AS_IF([test x$BUILD_GMP = xyes],[
+  BUILD_GMP=yes
+  GMP_CPPFLAGS='-I${builddir}/extern/install/gmp/include'
+  GMP_LDFLAGS='${builddir}/extern/install/gmp/lib/libgmp.la'
 ])
 
-AC_SUBST([GMP_USE_BUILTIN])
+AC_SUBST([BUILD_GMP])
 AC_SUBST([GMP_CPPFLAGS])
 AC_SUBST([GMP_LDFLAGS])
 
@@ -363,35 +362,40 @@ AS_IF([test "x$enable_hpcgap" = xyes],
   AS_IF([test "x$ADDGUARDS2" = x], AC_MSG_ERROR([could not locate addguards2]))
 
 
-# TODO: there are further hpcgap specific external dependencies:
-#  gc - the Boehm garbage collector, see http://www.hboehm.info/gc/
-#  libatomic_ops - part of gc, but see also https://github.com/ivmai/libatomic_ops
-#  ...
+  # We bundle two libraries we need for HPC-GAP:
+  # Boehm garbage collector, see http://www.hboehm.info/gc/
+  # libatomic_ops - part of Boehm GC, but see also https://github.com/ivmai/libatomic_ops
+  #
+  # We bundle them because we need a few patches to Boehm GC which are
+  # not upstream (and it is unclear whether they ever will be).
+  # And we bundle libatomic_ops because its version must match that
+  # of Boehm GC; the easiest way to ensure that is to include that, too.
+  #
+  # As a side benefit, users do not have to worry about installing dependencies.
 
-# HACK
-AC_DEFINE([BOEHM_GC], [1], [Use Boehm garbage collector])
+  BUILD_LIBATOMIC_OPS=yes
+  LIBATOMIC_OPS_CPPFLAGS='-I${builddir}/extern/install/libatomic_ops/include'
+  LIBATOMIC_OPS_LDFLAGS='${builddir}/extern/install/libatomic_ops/lib/libatomic_ops.la'
+  AC_SUBST([BUILD_LIBATOMIC_OPS])
+  AC_SUBST([LIBATOMIC_OPS_CPPFLAGS])
+  AC_SUBST([LIBATOMIC_OPS_LDFLAGS])
 
-# TODO: detect BOEHM GC and set flags suitably
-#  -> may want to build the one shipped with HPC-GAP,
-#  as that has special improvements for HPC-GAP
-AS_IF([test "x$enable_hpcgap" = xyes],[BOEHM_LDFLAGS="-lgc"])
-AC_SUBST([BOEHM_CPPFLAGS])
-AC_SUBST([BOEHM_LDFLAGS])
+  ATOMIC_OPS_CFLAGS=$LIBATOMIC_OPS_CPPFLAGS
+  ATOMIC_OPS_LIBS=$LIBATOMIC_OPS_LDFLAGS
 
-# TODO: detected libatomic and set flags suitably
-#  -> may want to build the one shipped with HPC-GAP,
-#  as that has special improvements for HPC-GAP
-AC_SUBST([LIBATOMIC_OPS_CPPFLAGS])
-AC_SUBST([LIBATOMIC_OPS_LDFLAGS])
-
-# FIXME: what about these defines which HPC-GAP seems to "know"?
-# - DISABLE_GC
-# - NUM_CPUS
-# - VERBOSE_GUARDS
-
+  AC_DEFINE([BOEHM_GC], [1], [Use Boehm garbage collector])
+  BUILD_BOEHM_GC=yes
+  BOEHM_GC_CPPFLAGS='-I${builddir}/extern/install/gc/include'
+  BOEHM_LDFLAGS='${builddir}/extern/install/gc/lib/libgc.la'
+  AC_SUBST([BUILD_BOEHM_GC])
+  AC_SUBST([BOEHM_GC_CPPFLAGS])
+  AC_SUBST([BOEHM_LDFLAGS])
   ]
 )
 
+
+# HACK to see if a cache file is set, and what it is
+AS_BOX([cache_file = $cache_file.])
 
 
 dnl
