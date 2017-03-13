@@ -376,6 +376,9 @@ AS_IF([test "x$enable_compat_mode" = xyes],
     AC_CONFIG_FILES([sysinfo.gap:cnf/compat/sysinfo.gap.in])
     AC_CONFIG_LINKS([bin/$GAPARCH/config.h:gen/config.h])
     AC_CONFIG_LINKS([bin/$GAPARCH/src:src])
+    AS_IF([test x$BUILD_GMP = xyes],[
+      AC_CONFIG_FILES([bin/$GAPARCH/extern/gmp/include/gmp.h:cnf/compat/gmp.h.in])
+    ])
     AS_IF([test "x$srcdir" = x.],
         [
             AC_MSG_NOTICE([in-tree build])
