@@ -18,12 +18,12 @@
  */
 
 
-#include "libgap.h"
-#include "system.h"
-#include "gap.h"
-#include "gasman.h"
-#include "libgap_internal.h"
-#include "scanner.h"
+#include <src/libgap.h>
+#include <src/system.h>
+#include <src/gap.h>
+#include <src/gasman.h>
+#include <src/libgap_internal.h>
+#include <src/scanner.h>
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
