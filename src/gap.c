@@ -108,6 +108,10 @@
 #include <src/intfuncs.h>
 #include <src/iostream.h>
 
+#if defined(LIBGAP)
+#include <src/libgap.h>
+#endif
+
 /****************************************************************************
 **
 
@@ -1118,6 +1122,9 @@ Obj FuncCALL_WITH_CATCH( Obj self, Obj func, Obj args )
 
 Obj FuncJUMP_TO_CATCH( Obj self, Obj payload)
 {
+#if defined(LIBGAP)
+  libgap_call_error_handler();
+#endif
   TLS(ThrownObject) = payload;
   syLongjmp(TLS(ReadJmpError), 1);
   return 0;
