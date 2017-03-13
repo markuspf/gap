@@ -394,10 +394,6 @@ AS_IF([test "x$enable_hpcgap" = xyes],
 )
 
 
-# HACK to see if a cache file is set, and what it is
-AS_BOX([cache_file = $cache_file.])
-
-
 dnl
 dnl Detect host specific setting
 dnl
