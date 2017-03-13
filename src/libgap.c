@@ -70,9 +70,9 @@ void libgap_initialize(int argc, char ** argv)
     sysenviron = environ;
 
     /* Init interpreter state */
-    fprintf(stderr, "init global state\n");
     InitMainGlobalState();
 
+    /* TODO: These are part of the global state */
     NrImportedGVars = 0;
     NrImportedFuncs = 0;
 

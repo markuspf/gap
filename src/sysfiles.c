@@ -2913,8 +2913,8 @@ Char * SyFgets (
         // printf("SyFgets fid=%i\n", fid);
         return syFgets( line, length, fid, 1);
     }
-        return libgap_get_input(line, length);
-      // return syFgets( line, length, fid, 1);
+    return libgap_get_input(line, length);
+    // return syFgets( line, length, fid, 1);
 #endif
 
 }
