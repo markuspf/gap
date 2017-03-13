@@ -1024,6 +1024,8 @@ TNumAllocFuncBags       AllocFuncBags;
 
 TNumStackFuncBags       StackFuncBags;
 
+TNumLibFuncBags         LibFuncBags;
+
 Bag *                   StackBottomBags;
 
 UInt                    StackAlignBags;
@@ -1058,6 +1060,8 @@ void            InitBags (
     StackFuncBags   = stack_func;
     StackBottomBags = stack_bottom;
     StackAlignBags  = stack_align;
+
+    LibFuncBags = 0;
 
     /* first get some storage from the operating system                    */
     initial_size    = (initial_size + 511) & ~(511);
@@ -1804,6 +1808,10 @@ again:
     for ( i = 0; i < GlobalBags.nr; i++ )
         MARK_BAG( *GlobalBags.addr[i] );
 
+    /* allow users of libgap to mark their choice of bags */
+    if ( LibFuncBags ) {
+        (*LibFuncBags)();
+    }
 
     /* mark from the stack                                                 */
     if ( StackFuncBags ) {

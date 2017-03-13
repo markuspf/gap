@@ -1047,6 +1047,7 @@ typedef Bag *           (* TNumAllocFuncBags) (
                                 UInt            need );
 
 typedef void            (* TNumStackFuncBags) ( void );
+typedef void            (* TNumLibFuncBags) (void);
 
 typedef void            (* TNumAbortFuncBags) (
                                 const Char *    msg );
@@ -1081,6 +1082,8 @@ extern void FinishBags( void );
 extern void CallbackForAllBags(
      void (*func)(Bag) );
 
+
+extern TNumLibFuncBags LibFuncBags;
 
 #endif // GAP_GASMAN_H
 
