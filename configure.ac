@@ -212,7 +212,7 @@ AC_ARG_ENABLE([libgap],
 AC_MSG_CHECKING([whether to enable LibGAP])
 AC_MSG_RESULT([$enable_libgap])
 
-AC_SUBST([LIBGAP], [$enable_libgap])
+AC_SUBST([BUILD_LIBGAP], [$enable_libgap])
 
 dnl
 dnl User setting: Debug mode (off by default)
