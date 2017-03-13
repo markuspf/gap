@@ -205,49 +205,6 @@ AC_MSG_CHECKING([whether to enable debug mode])
 AC_MSG_RESULT([$enable_debug])
 
 dnl
-dnl User setting: Compatibility mode (on by default)
-dnl
-CONFIGNAME="default${ABI}"
-BASECC=`basename ${CC}`
-GAPARCH="$host-$BASECC-${CONFIGNAME}"
-AC_DEFINE_UNQUOTED([CONFIGNAME], ["$CONFIGNAME"], [for backwards compatibility])
-AC_DEFINE_UNQUOTED([SYS_ARCH], ["$GAPARCH"], [for backwards compatibility])
-AC_SUBST([GAPARCH])
-
-AC_ARG_ENABLE([compat-mode],
-    [AS_HELP_STRING([--disable-compat-mode], [enable compatibility mode])],
-    [],
-    [enable_compat_mode=yes]
-    )
-AC_MSG_CHECKING([whether to enable compatibility mode for packages])
-AC_MSG_RESULT([$enable_compat_mode])
-
-AC_SUBST([COMPAT_MODE], [$enable_compat_mode])
-AS_IF([test "x$enable_compat_mode" = xyes],
-    [
-    AC_CONFIG_FILES([bin/gap.sh:cnf/compat/gap.sh.in], [chmod +x bin/gap.sh])
-    AC_CONFIG_FILES([sysinfo.gap:cnf/compat/sysinfo.gap.in])
-    AC_CONFIG_LINKS([bin/$GAPARCH/config.h:gen/config.h])
-    AC_CONFIG_LINKS([bin/$GAPARCH/src:src])
-    AS_IF([test "x$srcdir" = x.],
-        [
-            AC_MSG_NOTICE([in-tree build])
-        ],
-        [
-            AC_MSG_NOTICE([out-of-tree build])
-            # FIXME: the following config command works if invoked
-            # explicitly, but for some reason is not added to the list
-            # of automatic command
-            AC_CONFIG_COMMANDS([src/compiled.h],
-                [
-                echo "#include \"$ac_abs_top_srcdir/src/compiled.h\"" > src/compiled.h
-                ])
-        ])
-    ])
-
-
-
-dnl
 dnl External dependencies
 dnl
 
@@ -392,6 +349,48 @@ AS_IF([test "x$enable_hpcgap" = xyes],
   AC_SUBST([BOEHM_LDFLAGS])
   ]
 )
+
+
+dnl
+dnl User setting: Compatibility mode (on by default)
+dnl
+CONFIGNAME="default${ABI}"
+BASECC=`basename ${CC}`
+GAPARCH="$host-$BASECC-${CONFIGNAME}"
+AC_DEFINE_UNQUOTED([CONFIGNAME], ["$CONFIGNAME"], [for backwards compatibility])
+AC_DEFINE_UNQUOTED([SYS_ARCH], ["$GAPARCH"], [for backwards compatibility])
+AC_SUBST([GAPARCH])
+
+AC_ARG_ENABLE([compat-mode],
+    [AS_HELP_STRING([--disable-compat-mode], [enable compatibility mode])],
+    [],
+    [enable_compat_mode=yes]
+    )
+AC_MSG_CHECKING([whether to enable compatibility mode for packages])
+AC_MSG_RESULT([$enable_compat_mode])
+
+AC_SUBST([COMPAT_MODE], [$enable_compat_mode])
+AS_IF([test "x$enable_compat_mode" = xyes],
+    [
+    AC_CONFIG_FILES([bin/gap.sh:cnf/compat/gap.sh.in], [chmod +x bin/gap.sh])
+    AC_CONFIG_FILES([sysinfo.gap:cnf/compat/sysinfo.gap.in])
+    AC_CONFIG_LINKS([bin/$GAPARCH/config.h:gen/config.h])
+    AC_CONFIG_LINKS([bin/$GAPARCH/src:src])
+    AS_IF([test "x$srcdir" = x.],
+        [
+            AC_MSG_NOTICE([in-tree build])
+        ],
+        [
+            AC_MSG_NOTICE([out-of-tree build])
+            # FIXME: the following config command works if invoked
+            # explicitly, but for some reason is not added to the list
+            # of automatic command
+            AC_CONFIG_COMMANDS([src/compiled.h],
+                [
+                echo "#include \"$ac_abs_top_srcdir/src/compiled.h\"" > src/compiled.h
+                ])
+        ])
+    ])
 
 
 dnl
