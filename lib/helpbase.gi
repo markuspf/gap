@@ -101,7 +101,7 @@ BindGlobal( "TRANSATL",
               [ "abeling", "abelling" ],
               [ "olvable", "oluble" ],
               [ "yse", "yze" ],
-	      [ "roebner", "robner"]] );
+              [ "roebner", "robner"]] );
 
 
 #############################################################################
