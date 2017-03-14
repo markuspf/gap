@@ -1083,8 +1083,15 @@ extern void CallbackForAllBags(
      void (*func)(Bag) );
 
 
-/* If not 0 this function will be called */
+/*
+ * If not 0 this function will be called in
+ * CollectBags to allow users of libgap to mark bags
+ */
 extern TExtraMarkFuncBags ExtraMarkFuncBags;
+
+static void SetExtraMarkFuncBags(TExtraMarkFuncBags func)
+{ ExtraMarkFuncBags = func; }
+
 
 #endif // GAP_GASMAN_H
 

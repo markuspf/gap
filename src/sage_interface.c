@@ -18,11 +18,11 @@
  */
 
 
-#include <src/libgap.h>
+#include <src/sage_interface.h>
+#include <src/sage_interface_internal.h>
 #include <src/system.h>
 #include <src/gap.h>
 #include <src/gasman.h>
-#include <src/libgap_internal.h>
 #include <src/scanner.h>
 #include <assert.h>
 #include <stdio.h>
@@ -81,7 +81,7 @@ void libgap_finalize()
 
 void libgap_set_gasman_callback(libgap_gasman_callback_ptr callback)
 {
-    LibFuncBags = callback;
+    SetExtraMarkFuncBags(callback);
 }
 
 /*************************************************************************/

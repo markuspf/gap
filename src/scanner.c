@@ -2254,7 +2254,7 @@ Int nrLineBreak( KOutputStream stream )
 #if defined(LIBGAP)
 
 /* TODO: Do this properly */
-#include "libgap_internal.h"
+#include "sage_interface_internal.h"
 
 void PutChrTo(KOutputStream stream, Char ch)
 {

@@ -88,7 +88,7 @@ extern int errno;
 #endif
 
 #if defined(LIBGAP)
-#include "libgap_internal.h"
+#include "sage_interface_internal.h"
 #endif
 
 
