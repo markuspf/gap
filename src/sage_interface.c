@@ -65,6 +65,7 @@ void libgap_initialize(int argc, char ** argv)
     InitMainGlobalState();
     libgap_mark_stack_bottom();
     InitializeGap(&argc, argv, environ);
+    SetJumpToCatchFunc(libgap_call_error_handler);
 }
 
 void libgap_finalize()
