@@ -87,6 +87,9 @@ extern int errno;
 #include <process.h>
 #endif
 
+#if defined(LIBGAP)
+#include "sage_interface_internal.h"
+#endif
 
 /* utility to check return value of 'write'  */
 ssize_t writeandcheck(int fd, const char *buf, size_t count) {
