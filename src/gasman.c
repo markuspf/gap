@@ -1024,6 +1024,8 @@ TNumAllocFuncBags       AllocFuncBags;
 
 TNumStackFuncBags       StackFuncBags;
 
+TExtraMarkFuncBags      ExtraMarkFuncBags;
+
 Bag *                   StackBottomBags;
 
 UInt                    StackAlignBags;
@@ -1042,7 +1044,7 @@ void            InitBags (
     UInt                stack_align,
     UInt                cache_size,
     UInt                dirty,
-    TNumAbortFuncBags   abort_func )
+    TNumAbortFuncBags   abort_func)
 {
     Bag *               p;              /* loop variable                   */
     UInt                i;              /* loop variable                   */
@@ -1053,6 +1055,7 @@ void            InitBags (
     /* install the allocator and the abort function                        */
     AllocFuncBags   = alloc_func;
     AbortFuncBags   = abort_func;
+    ExtraMarkFuncBags = 0;
 
     /* install the stack marking function and values                       */
     StackFuncBags   = stack_func;
@@ -1807,6 +1810,11 @@ again:
     for ( i = 0; i < GlobalBags.nr; i++ )
         MARK_BAG( *GlobalBags.addr[i] );
 
+    /* allow users of libgap to mark their choice of bags */
+    /* TODO: This can probably be solved a lot more cleanly */
+    if ( ExtraMarkFuncBags ) {
+        (*ExtraMarkFuncBags)();
+    }
 
     /* mark from the stack                                                 */
     if ( StackFuncBags ) {
