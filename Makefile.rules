@@ -282,6 +282,7 @@ QUIET_CC      = @echo "   C       $< => $@";
 QUIET_LINK    = @echo "   LINK    $@";
 QUIET_WARD    = @echo "   WARD    $< => $@";
 QUIET_SED     = @echo "   SED     $< => $@";
+QUIET_INSTALL = @echo "   INSTALL $< => $@";
 QUIET         = @
 LIBTOOL 	 += --silent
 endif
@@ -955,3 +956,7 @@ GNUmakefile: $(srcdir)/GNUmakefile.in config.status
 
 gac: $(srcdir)/cnf/gac.in config.status
 	$(SHELL) ./config.status $@
+
+LTINSTALL=$(LIBTOOL) --mode=install $(INSTALL)
+install-libgap: libgap.la
+	$(QUIET_INSTALL)$(LTINSTALL) libgap.la $(libdir)

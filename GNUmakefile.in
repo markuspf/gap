@@ -76,6 +76,7 @@ AS = @AS@
 AWK = @AWK@
 CC = @CC@
 CPP = @CPP@
+INSTALL = @INSTALL@
 LD = @LD@
 LIPO = @LIPO@
 LN_S = @LN_S@
