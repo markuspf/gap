@@ -2312,36 +2312,25 @@ Char * readlineFgets (
 
 #endif
 
-Char * syFgets (
-    Char *              line,
-    UInt                length,
-    Int                 fid,
-    UInt                block)
-{
-    Int                 ch,  ch2,  ch3, last;
-    Char                * p,  * q,  * r,  * s,  * t;
-    static Char         yank [32768];
-    Char                old [512],  new [512];
-    Int                 oldc,  newc;
-    Int                 rep, len;
-    Char                buffer [512];
-    Int                 rn;
-    Int                 rubdel;
-    Obj                 linestr, yankstr, args, res;
+Char *EmulateReadline(Char *line, UInt length, Int fid, UInt block);
+Char *Readline(Char *line, UInt length, Int fid, UInt block);
 
-    /* check file identifier                                               */
+Char *syFgets(Char *line, UInt length, Int fid, UInt block)
+{
+    Char                *p;
+
+    /* check file identifier */
     if ( sizeof(syBuf)/sizeof(syBuf[0]) <= fid || fid < 0 ) {
         return (Char*)0;
     }
+
     if ( syBuf[fid].fp == -1 ) {
         return (Char*)0;
     }
 
-    /* no line editing if the file is not '*stdin*' or '*errin*'           */
+    /* no line editing if the file is not '*stdin*' or '*errin*' */
     if ( fid != 0 && fid != 2 ) {
-      p = syFgetsNoEdit(line, length, fid, block);
-
-        return p;
+        return syFgetsNoEdit(line, length, fid, block);
     }
 
     /* no line editing if the user disabled it
@@ -2355,28 +2344,51 @@ Char * syFgets (
 
 #if HAVE_LIBREADLINE
     if (SyUseReadline) {
-      /* switch back to cooked mode                                          */
-      if ( SyLineEdit )
-          syStopraw(fid);
-
-      /* stop the clock, reading should take no time                         */
-      SyStopTime = SyTime();
-
-      p = readlineFgets(line, length, fid, block);
-      /* start the clock again                                               */
-      SyStartTime += SyTime() - SyStopTime;
-      if ( EndLineHook ) Call0ArgsInNewReader( EndLineHook );
-      if (!p)
-        return p;
-      else
-        return line;
-    } else {
+        return Readline(line,length,fid,block);
+    } else
 #endif
+        return EmulateReadline(line, length, fid, block);
+}
 
-    /* In line editing mode 'length' is not allowed bigger than the
-      yank buffer (= length of line buffer for input files).*/
+Char *Readline(Char *line, UInt length, Int fid, UInt block)
+{
+    Char *p;
+
+    /* switch back to cooked mode */
+    if (SyLineEdit)
+        syStopraw(fid);
+
+    /* stop the clock, reading should take no time */
+    SyStopTime = SyTime();
+
+    p = readlineFgets(line, length, fid, block);
+    /* start the clock again */
+    SyStartTime += SyTime() - SyStopTime;
+    if (EndLineHook)
+        Call0ArgsInNewReader(EndLineHook);
+    if (!p)
+        return p;
+    else
+        return line;
+}
+
+Char *EmulateReadline(Char *line, UInt length, Int fid, UInt block)
+{
+    Int                 ch,  ch2,  ch3, last;
+    Char                * p,  * q,  * r,  * s,  * t;
+    static Char         yank [32768];
+    Char                old [512],  new [512];
+    Int                 oldc,  newc;
+    Int                 rep, len;
+    Char                buffer [512];
+    Int                 rn;
+    Int                 rubdel;
+    Obj                 linestr, yankstr, args, res;
+
+  /* In line editing mode 'length' is not allowed bigger than the
+     yank buffer (= length of line buffer for input files).*/
     if (length > 32768)
-       ErrorQuit("Cannot handle lines with more than 32768 characters in line edit mode.",0,0);
+        ErrorQuit("Cannot handle lines with more than 32768 characters in line edit mode.",0,0);
     /* stop the clock, reading should take no time                         */
     SyStopTime = SyTime();
 
@@ -2387,9 +2399,9 @@ Char * syFgets (
     last = 0;
     ch = 0;
     rubdel=0; /* do we want to east a `del' character? */
-
+    
     while ( 1 ) {
-
+        
         /* get a character, handle <ctr>V<chr>, <esc><num> and <ctr>U<num> */
         rep = 1; ch2 = 0;
         do {
@@ -2879,10 +2891,6 @@ Char * syFgets (
     if ( *line == '\0' )
         return (Char*)0;
     return line;
-
-#if HAVE_LIBREADLINE
-}
-#endif
 }
 
 Char * SyFgets (
