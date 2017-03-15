@@ -1260,7 +1260,7 @@ gap> PVALUATION_INT(0,0);
 Error, PValuationInt: <p> must be nonzero
 
 #
-gap> STOP_TEST( "intarith.tst", 290000);
+gap> STOP_TEST( "intarith.tst", 1);
 
 #############################################################################
 ##
