@@ -95,5 +95,3 @@ ReadLib( "macfloat.g"  );
 
 ReadLib( "error.g"   );
 ReadLib( "session.g" );
-
-ReadLib( "printConstructors.g" );

@@ -26,3 +26,4 @@ ReadLib( "teaching.g"  );
 ReadLib( "teachm2.g"  );
 
 ReadLib( "printConstructors.g" );
+ReadLib( "wrapGlobalFunctions.gi");
