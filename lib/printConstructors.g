@@ -35,7 +35,7 @@ InstallMethod(MitM_OM, [IsObject],
     function(obj)
         local str, arg, r, cd_name;
 
-        cd_name := "scscp_transient_mitm";
+        cd_name := "http://www.gap-system.org/lib";
 
         str := "";
         #TODO: EMPTYMATRIX SHOULDN'T BE LIST, SHOULD BE LOOKED UP FIRST
