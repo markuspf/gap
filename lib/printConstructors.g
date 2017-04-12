@@ -4,7 +4,7 @@ LoadPackage("Openmath", false);
 #uses different comparison than library function
 DeclareOperation("MitM_LookupDictionary", [IsListLookupDictionary, IsObject]);
 InstallMethod(MitM_LookupDictionary,"for list dictionaries",true,
-  [IsListLookupDictionary,IsObject],0,
+              [IsListLookupDictionary,IsObject],0,
 function(d,x)
     local p;
     for p in d!.entries do
@@ -21,8 +21,7 @@ for filter in [IsInt, IsFloat, IsPerm, IsTransformation, IsRationals, IsFFE] do
     InstallMethod(MitM_OM, [filter],
         function(obj)
             return OMString(obj:noomobj); 
-        end
-    );
+        end);
 od;
 
 InstallMethod(MitM_OM, [IsString],
@@ -31,11 +30,23 @@ InstallMethod(MitM_OM, [IsString],
     end
 );
 
+BindGlobal("MitM_CDBase", "http://gap-system.org/lib");
+BindGlobal("MitM_ExtractCD",
+function(file)
+    local p1, p2, cd;
+
+    p1 := Positions(file, '/');
+    p1 := p1[Length(p1)] + 1;
+
+    p2 := Positions(cd, '.');
+    p2 := p2[Length(p2)];
+
+    return file{[p1..p2]};
+end);
+
 InstallMethod(MitM_OM, [IsObject],
     function(obj)
-        local str, arg, r, cd_name;
-
-        cd_name := "http://www.gap-system.org/lib";
+        local str, arg, r, cd;
 
         str := "";
         #TODO: EMPTYMATRIX SHOULDN'T BE LIST, SHOULD BE LOOKED UP FIRST
@@ -63,8 +74,9 @@ InstallMethod(MitM_OM, [IsObject],
         elif(r = fail) then
             str := OMString(obj:noomobj);
         else
-            str := Concatenation("<OMA><OMS cd=\"", cd_name, "\" name=\"",
-                    r.name, "\"/>");
+            cd := MitM_ExtractCD(r.filename_func);
+            str := Concatenation("<OMA><OMS cd_base=\"", MitM_CDBase, "\""
+                                 , " cd=\"", cd, "\" name=\"", r.name, "\"/>");
 
             for arg in r.args do
                 str := Concatenation(str, MitM_OM(arg));
