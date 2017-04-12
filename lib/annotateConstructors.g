@@ -20,7 +20,10 @@ function( functionToBeCalled, replacedFunction )
                         return;
                     fi;
                     res := res[1];
-                    r := rec(name := NameFunction(arg[1]), args := local_arg);
+
+                    r := rec( name := NameFunction(arg[1])
+                            , filename_func := FILENAME_FUNC(arg[1])
+                            , args := local_arg);
                     if(IsAttributeStoringRep(res)) then
                         SetMitM_ConstructorInfo(res, r);
                     else
