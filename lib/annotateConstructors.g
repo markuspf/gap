@@ -7,37 +7,30 @@ BIND_GLOBAL("_GLOBAL_MITM_CONSTRUCTOR_TABLE", NewDictionary(false, true));
 #TODO: rename variables
 wrapper :=
 function( functionToBeCalled, replacedFunction )
-  return function( arg...)
-    local list;
+    return function( arg...)
+        local list;
 
-    list := arg{[1..(Length(arg)-1)]};
-    Append(list,
-    [(function(local_arg...)
-        local res, r;
+        list := arg{[1..(Length(arg)-1)]};
+        Append(list,
+               [(function(local_arg...)
+                    local res, r;
 
+                    res := CallFuncListWrap(arg[(Length(arg))], (local_arg));
+                    if(Length(res) = 0) then
+                        return;
+                    fi;
+                    res := res[1];
+                    r := rec(name := NameFunction(arg[1]), args := local_arg);
+                    if(IsAttributeStoringRep(res)) then
+                        SetMitM_ConstructorInfo(res, r);
+                    else
+                        AddDictionary(_GLOBAL_MITM_CONSTRUCTOR_TABLE, res, r);
+                    fi;
 
-                res := CallFuncListWrap(arg[(Length(arg))], (local_arg));
-    
-        if(Length(res) = 0) then
-          return;
-        fi;
-    
-        res := res[1];
-        
-        
-        r := rec(name := NameFunction(arg[1]), args := local_arg);
-    
-        if(IsAttributeStoringRep(res)) then
-          SetMitM_ConstructorInfo(res, r);
-        else
-          AddDictionary(_GLOBAL_MITM_CONSTRUCTOR_TABLE, res, r);
-        fi;
-    
-      return res;
-    end)]);
-
-    CallFuncList(functionToBeCalled, list);
-  end;
+                    return res;
+                end)]);
+        CallFuncList(functionToBeCalled, list);
+    end;
 end;
 
 for str in ["InstallMethod", "InstallOtherMethod"] do
@@ -45,5 +38,5 @@ for str in ["InstallMethod", "InstallOtherMethod"] do
     temp := ValueGlobal(str);
     UnbindGlobal(str);
     BIND_GLOBAL(str, wrapper(temp, str));
-#    MakeReadOnlyGlobal(str);
+    #    MakeReadOnlyGlobal(str);
 od;
