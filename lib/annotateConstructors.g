@@ -5,6 +5,18 @@ BIND_GLOBAL("_GLOBAL_MITM_CONSTRUCTOR_TABLE", NewDictionary(false, true));
 
 #TODO: remove this from global scope
 #TODO: rename variables
+loc := function(o)
+    local i;
+    if IsOperation(o) then
+        i := PositionProperty(OPERATIONS, x -> x = o);
+        return OPERATIONS_LOCATIONS[i + 1];
+    elif IsFunction(o) then
+        return rec( file := FILENAME_FUNC(o) );
+    else
+        return rec();
+    fi;
+end;
+
 wrapper :=
 function( functionToBeCalled, replacedFunction )
     return function( arg...)
@@ -22,7 +34,7 @@ function( functionToBeCalled, replacedFunction )
                     res := res[1];
 
                     r := rec( name := NameFunction(arg[1])
-                            , filename_func := FILENAME_FUNC(arg[1])
+                            , location := loc(arg[1])
                             , args := local_arg);
                     if(IsAttributeStoringRep(res)) then
                         SetMitM_ConstructorInfo(res, r);

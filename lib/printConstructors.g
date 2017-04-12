@@ -32,16 +32,22 @@ InstallMethod(MitM_OM, [IsString],
 
 BindGlobal("MitM_CDBase", "http://gap-system.org/lib");
 BindGlobal("MitM_ExtractCD",
-function(file)
-    local p1, p2, cd;
+function(loc)
+    local p1, p2, cd, file;
 
-    p1 := Positions(file, '/');
-    p1 := p1[Length(p1)] + 1;
+    if Length(loc) > 0 then
+        file := loc[1].file;
 
-    p2 := Positions(cd, '.');
-    p2 := p2[Length(p2)];
+        p1 := Positions(file, '/');
+        p1 := p1[Length(p1)] + 1;
 
-    return file{[p1..p2]};
+        p2 := Positions(file, '.');
+        p2 := p2[Length(p2)] - 1;
+
+        return file{[p1..p2]};
+    else
+        return "default";
+    fi;
 end);
 
 InstallMethod(MitM_OM, [IsObject],
@@ -65,16 +71,14 @@ InstallMethod(MitM_OM, [IsObject],
             else
                 str := Concatenation(str, "<OMS cd=\"permut1\" name=\"permutation\"/>");
             fi;
-    
             for arg in obj do
                 str := Concatenation(str, MitM_OM(arg));
             od;
-    
             str := Concatenation(str, "</OMA>");
         elif(r = fail) then
             str := OMString(obj:noomobj);
         else
-            cd := MitM_ExtractCD(r.filename_func);
+            cd := MitM_ExtractCD(r.location);
             str := Concatenation("<OMA><OMS cd_base=\"", MitM_CDBase, "\""
                                  , " cd=\"", cd, "\" name=\"", r.name, "\"/>");
 
