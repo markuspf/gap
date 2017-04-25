@@ -12,10 +12,6 @@
 ##  This file contains generic methods for associative words.
 ##
 
-#############################################################################
-##
-#F  AssignGeneratorVariables(<G>)
-##
 BindGlobal("DoAssignGenVars",function(gens)
 local g,s;
   # test whether the variable name would be a proper identifier
@@ -42,28 +38,40 @@ end);
 
 InstallMethod(AssignGeneratorVariables, "default method for a group",
         [IsGroup],
-        function(G)
-local gens;
-  gens := GeneratorsOfGroup(G);
-  DoAssignGenVars(gens);
+function(G)
+    local gens;
+
+    gens := GeneratorsOfGroup(G);
+    DoAssignGenVars(gens);
 end);
 
-#############################################################################
-##
-#F  AssignGeneratorVariables(<R>)
-##
+InstallMethod(AssignGeneratorVariables, "default method for a monoid",
+        [IsMonoid],
+function(M)
+    local gens;
+
+    gens := GeneratorsOfMonoid(M);
+    DoAssignGenVars(gens);
+end);
+
+InstallMethod(AssignGeneratorVariables, "default methid for a semigroups",
+        [IsSemigroup],
+function(S)
+    local gens;
+
+    gens := GeneratorsOfSemigroup(S);
+    DoAssignGenVars(gens);
+end);
+
 InstallMethod(AssignGeneratorVariables, "default method for a ring",
         [IsRing and HasGeneratorsOfRing],
-        function(G)
-local gens;
-  gens := GeneratorsOfRing(G);
-  DoAssignGenVars(gens);
+function(G)
+    local gens;
+
+    gens := GeneratorsOfRing(G);
+    DoAssignGenVars(gens);
 end);
 
-#############################################################################
-##
-#F  AssignGeneratorVariables(<A>)
-##
 InstallMethod(AssignGeneratorVariables, "default method for a LOR",
         [IsLeftOperatorRing],
         function(G)
