@@ -611,6 +611,10 @@ InstallAccessToGenerators( IsSubgroupFpGroup and IsGroupOfFamily
                            GeneratorsOfMagmaWithInverses );
 
 
+InstallMethod( FreeGroupOfWord, "for word over a free group",
+        [ IsWord ], w -> FamilyObj(w)!.freeGroup);
+ 
+
 #############################################################################
 ##
 #E

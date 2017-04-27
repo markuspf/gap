@@ -93,6 +93,21 @@ DeclareSynonym( "IsElementOfFreeGroupFamily",IsAssocWordWithInverseFamily );
 ##
 DeclareGlobalFunction( "FreeGroup" );
 
+#############################################################################
+##
+#F  FreeGroupOfWord( <word> )
+##
+##  <#GAPDoc Label="FreeGroupOfWord">
+##  <ManSection>
+##  <Heading>FreeGroupOfWord</Heading>
+##  <Func Name="FreeGroupOfWord" Arg='word'
+##  <Description>
+##  Returns the free group that <A>word</A> is a member of.
+##  </Description>
+##  </ManSection
+##  <#/GAPDoc>
+DeclareOperation( "FreeGroupOfWord", [IsWord] );
+
 
 #############################################################################
 ##
