@@ -199,7 +199,7 @@ BIND_GLOBAL( "InstallFlushableValueFromFunction", function( gvar, func )
       function()
          local ret;
          ret := func();
-         CLONE_OBJ(gvar, ret);
+         SWITCH_OBJ(gvar, ret);
          gvar := ret;
         TryNextMethod();
       end );
@@ -223,7 +223,7 @@ BIND_GLOBAL( "InstallFlushableValue", function( gvar, value )
     InstallMethod( FlushCaches,
       [],
       function()
-          CLONE_OBJ( gvar, DEEP_COPY_OBJ( initval ) );
+          SWITCH_OBJ( gvar, DEEP_COPY_OBJ( initval ) );
           TryNextMethod();
       end );
 end );
