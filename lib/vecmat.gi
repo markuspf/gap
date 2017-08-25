@@ -1187,7 +1187,7 @@ end);
 LOCAL_COPY_GF2 := GF(2);
 
 InstallGlobalFunction(ConvertToVectorRepNC,function( arg )
-    local   v,  q,  vc,  common,  field, q0;
+    local v, q, vc, common, field, q0, mutable;
     if Length(arg) < 1 then
         Error("ConvertToVectorRep: one or two arguments required");
     fi;
@@ -1280,7 +1280,12 @@ InstallGlobalFunction(ConvertToVectorRepNC,function( arg )
                 #
                 return true;
             fi;
-            CLONE_OBJ(v,vc); # horrible hack.
+            # retain mutablity
+            mutable := IS_MUTABLE_OBJ(v);
+            SWITCH_OBJ(v,vc); # horrible hack.
+            if not mutable then
+                MakeImmutable(v);
+            fi;
         else
             return true;
         fi;
