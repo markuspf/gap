@@ -917,20 +917,7 @@ BindGlobal( "ShowPackageInformation", function()
   # We use an abbreviation for the distributed combination of
   # idX and smallX components.
   if GAPInfo.LoadedComponents <> rec() then
-    cmpdist := rec(id10:="0.1",id2:="3.0",id3:="2.1",id4:="1.0",id5:="1.0",
-               id6:="1.0",id9:="1.0",small:="2.1",small10:="0.2",
-               small11:="0.1",small2:="2.0",small3:="2.0",small4:="1.0",
-               small5:="1.0",small6:="1.0",small7:="1.0",small8:="1.0",
-               small9:="1.0");
     ld := ShallowCopy(GAPInfo.LoadedComponents);
-    if ForAll(RecNames(cmpdist), f-> IsBound(ld.(f))
-                                      and ld.(f) = cmpdist.(f)) then
-      for f in RecNames(cmpdist) do
-        Unbind(ld.(f));
-      od;
-      ld.("small*") := "1.0";
-      ld.("id*") := "1.0";
-    fi;
     print_info( " Components: ",
                 List( RecNames( ld ), name -> Concatenation( name, " ",
                                   ld.( name ) ) ),
