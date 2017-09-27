@@ -1855,17 +1855,21 @@ void ReadFactor (
             Match( STATE(Symbol), "unary + or -", follow );
         }
 
-        /* ['^' <Atom>]                                                    */
-        ReadAtom( follow, 'r' );
+        if (sign2 == -1 && STATE(Symbol) == S_INT && strcmp(STATE(Value), "1") == 0) {
+            Match( STATE(Symbol), "", follow);
+            TRY_READ { IntrInv(); }
+        } else {
+            /* ['^' <Atom>]                                                    */
+            ReadAtom( follow, 'r' );
 
-        /* interpret the unary minus                                       */
-        if ( sign2 == -1 ) {
-            TRY_READ { IntrAInv(); }
+            /* interpret the unary minus                                       */
+            if ( sign2 == -1 ) {
+                TRY_READ { IntrAInv(); }
+            }
+
+            /* interpret the power                                             */
+            TRY_READ { IntrPow(); }
         }
-
-        /* interpret the power                                             */
-        TRY_READ { IntrPow(); }
-
         /* check for multiple '^'                                          */
         if ( STATE(Symbol) == S_POW ) { SyntaxError("'^' is not associative"); }
 
