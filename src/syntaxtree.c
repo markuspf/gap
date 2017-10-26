@@ -585,31 +585,6 @@ static Obj SyntaxTreeElmList(Obj result, Stat stat)
     return result;
 }
 
-static Obj SyntaxTreeAssList(Obj result, Stat stat)
-{
-    Obj list, refs, rhss;
-    Int nr;
-    Int i;
-
-    list = SyntaxTreeCompiler(ADDR_STAT(stat)[0]);
-    AssPRec(result, RNamName("list"), list);
-
-    nr = SIZE_STAT(stat) / sizeof(Stat) - 2;
-
-    refs = NEW_PLIST(T_PLIST, nr);
-    SET_LEN_PLIST(refs, nr);
-    AssPRec(result, RNamName("refs"), refs);
-
-    for(i = 1; i < 1 + nr; i++) {
-        SET_ELM_PLIST(refs, i, SyntaxTreeCompiler(ADDR_STAT(stat)[i]));
-        CHANGED_BAG(refs);
-    }
-    rhss = SyntaxTreeCompiler(ADDR_STAT(stat)[nr + 1]);
-    AssPRec(result, RNamName("rhs"), rhss);
-
-    return result;
-}
-
 static Obj SyntaxTreeFunc(Obj result, Obj func)
 {
     Obj str;
@@ -693,7 +668,11 @@ static const CompilerT StatCompilers[] = {
     COMPILER(T_PROCCALL_6ARGS, SyntaxTreeFunccall),
     COMPILER(T_PROCCALL_XARGS, SyntaxTreeFunccall),
 
+    COMPILER(T_PROCCALL_OPTS, SyntaxTreeDefaultCompiler,
+             ARG_("opts"), ARG_("call")),
+
     COMPILER(T_EMPTY, SyntaxTreeDefaultCompiler),
+
     COMPILER(T_SEQ_STAT, SyntaxTreeSeqStat),
     COMPILER(T_SEQ_STAT2, SyntaxTreeSeqStat),
     COMPILER(T_SEQ_STAT3, SyntaxTreeSeqStat),
@@ -701,22 +680,28 @@ static const CompilerT StatCompilers[] = {
     COMPILER(T_SEQ_STAT5, SyntaxTreeSeqStat),
     COMPILER(T_SEQ_STAT6, SyntaxTreeSeqStat),
     COMPILER(T_SEQ_STAT7, SyntaxTreeSeqStat),
+
     COMPILER(T_IF, SyntaxTreeIf),
     COMPILER(T_IF_ELSE, SyntaxTreeIf),
     COMPILER(T_IF_ELIF, SyntaxTreeIf),
     COMPILER(T_IF_ELIF_ELSE, SyntaxTreeIf),
+
     COMPILER(T_FOR, SyntaxTreeFor),
     COMPILER(T_FOR2, SyntaxTreeFor),
     COMPILER(T_FOR3, SyntaxTreeFor),
+
     COMPILER(T_FOR_RANGE, SyntaxTreeFor),
     COMPILER(T_FOR_RANGE2, SyntaxTreeFor),
     COMPILER(T_FOR_RANGE3, SyntaxTreeFor),
+
     COMPILER(T_WHILE, SyntaxTreeWhile),
     COMPILER(T_WHILE2, SyntaxTreeWhile),
     COMPILER(T_WHILE3, SyntaxTreeWhile),
+
     COMPILER(T_REPEAT, SyntaxTreeRepeat),
     COMPILER(T_REPEAT2, SyntaxTreeRepeat),
     COMPILER(T_REPEAT3, SyntaxTreeRepeat),
+
     COMPILER(T_ATOMIC, SyntaxTreeDefaultCompiler),
 
     COMPILER_(T_BREAK),
@@ -728,16 +713,21 @@ static const CompilerT StatCompilers[] = {
     COMPILER_(T_ASS_LVAR,
               ARG("lvar", SyntaxTreeIntObjInt), ARG_("rhs")),
     COMPILER_(T_UNB_LVAR, ARG("lvar", SyntaxTreeIntObjInt)),
+
     COMPILER_(T_ASS_HVAR,
              ARG("hvar", SyntaxTreeHVar), ARG_("rhs")),
     COMPILER_(T_UNB_HVAR,
              ARG("hvar", SyntaxTreeHVar)),
+
     COMPILER_(T_ASS_GVAR,
              ARG("gvar", SyntaxTreeGVar), ARG_("rhs")),
     COMPILER_(T_UNB_GVAR,
              ARG("gvar", SyntaxTreeGVar)),
+
     COMPILER_(T_ASS_LIST,
               ARG_("list"), ARG_("pos"), ARG_("rhs")),
+    COMPILER_(T_ASS2_LIST, ARG_("list"), ARG_("pos"), ARG_("rhs")),
+    COMPILER_(T_ASSX_LIST, ARG_("list"), ARG_("pos"), ARG_("rhs")),
     COMPILER_(T_ASSS_LIST,
               ARG_("list"), ARG_("poss"), ARG_("rhss")),
     COMPILER_(T_ASS_LIST_LEV,
@@ -746,6 +736,7 @@ static const CompilerT StatCompilers[] = {
               ARG_("lists"), ARG_("poss"), ARG_("rhss"), ARG("level", SyntaxTreeIntObjInt)),
     COMPILER_(T_UNB_LIST,
              ARG_("list"), ARG_("pos")),
+
     COMPILER_(T_ASS_REC_NAME,
               ARG_("record"), ARG("rnam", SyntaxTreeRNam), ARG_("rhs")),
     COMPILER_(T_ASS_REC_EXPR,
@@ -754,6 +745,7 @@ static const CompilerT StatCompilers[] = {
               ARG_("record"), ARG("rnam", SyntaxTreeRNam)),
     COMPILER_(T_UNB_REC_EXPR,
               ARG_("record"), ARG_("expression")),
+
     COMPILER_(T_ASS_POSOBJ,
               ARG_("posobj"), ARG_("pos"), ARG_("rhs")),
     COMPILER_(T_ASSS_POSOBJ,
@@ -764,6 +756,7 @@ static const CompilerT StatCompilers[] = {
               ARG_("lists"), ARG_("poss"), ARG_("rhss"), ARG("level", SyntaxTreeIntObjInt)),
     COMPILER_(T_UNB_POSOBJ,
               ARG_("posobj"), ARG_("pos")),
+
     COMPILER_(T_ASS_COMOBJ_NAME,
               ARG_("comobj"), ARG("rnam", SyntaxTreeRNam)),
     COMPILER_(T_ASS_COMOBJ_EXPR,
@@ -778,11 +771,6 @@ static const CompilerT StatCompilers[] = {
               ARG_("level"), ARG_("condition")),
     COMPILER_(T_ASSERT_3ARGS,
               ARG_("level"), ARG_("condition"), ARG_("message")),
-
-
-    COMPILER(T_PROCCALL_OPTS, SyntaxTreeDefaultCompiler,
-             ARG_("opts"), ARG_("call")),
-
 };
 
 static const CompilerT ExprCompilers[] = {
@@ -796,6 +784,10 @@ static const CompilerT ExprCompilers[] = {
     COMPILER(T_FUNCCALL_XARGS, SyntaxTreeFunccall),
 
     COMPILER(T_FUNC_EXPR, SyntaxTreeFuncExpr),
+
+    COMPILER_(T_FUNCCALL_OPTS,
+              ARG_("opts"), ARG_("call")),
+
 
     COMPILER_(T_OR, ARG_("left"), ARG_("right")),
     COMPILER_(T_AND, ARG_("left"), ARG_("right")),
@@ -824,11 +816,14 @@ static const CompilerT ExprCompilers[] = {
     COMPILER(T_PERM_EXPR, SyntaxTreePermExpr),
     COMPILER_(T_PERM_CYCLE),
     COMPILER(T_LIST_EXPR, SyntaxTreeListExpr),
-    COMPILER(T_LIST_TILD_EXPR, SyntaxTreeListExpr),
+    COMPILER(T_LIST_TILDE_EXPR, SyntaxTreeListExpr),
     COMPILER(T_RANGE_EXPR, SyntaxTreeRangeExpr),
     COMPILER(T_STRING_EXPR, SyntaxTreeStringExpr),
     COMPILER(T_REC_EXPR, SyntaxTreeRecExpr),
-    COMPILER_(T_REC_TILD_EXPR),
+    COMPILER_(T_REC_TILDE_EXPR),
+
+    COMPILER(T_FLOAT_EXPR_EAGER, SyntaxTreeFloatEager),
+    COMPILER(T_FLOAT_EXPR_LAZY, SyntaxTreeFloatLazy),
 
     COMPILER(T_REFLVAR, SyntaxTreeRefLVar),
     COMPILER(T_ISB_LVAR, SyntaxTreeRefLVar),
@@ -841,6 +836,8 @@ static const CompilerT ExprCompilers[] = {
     // TODO: can this be unified?
     COMPILER_(T_ELM_LIST,
               ARG_("list"), ARG_("pos")),
+    COMPILER(T_ELM2_LIST, SyntaxTreeElmList),
+    COMPILER(T_ELMX_LIST, SyntaxTreeElmList),
     COMPILER_(T_ELMS_LIST,
               ARG_("list"), ARG_("poss")),
     COMPILER_(T_ELM_LIST_LEV,
@@ -875,17 +872,6 @@ static const CompilerT ExprCompilers[] = {
               ARG_("comobj"), ARG("name", SyntaxTreeRNam)),
     COMPILER_(T_ISB_COMOBJ_EXPR,
               ARG_("comobj"), ARG_("expression")),
-
-    COMPILER_(T_FUNCCALL_OPTS,
-              ARG_("opts"), ARG_("call")),
-
-    COMPILER(T_FLOAT_EXPR_EAGER, SyntaxTreeFloatEager),
-    COMPILER(T_FLOAT_EXPR_LAZY, SyntaxTreeFloatLazy),
-
-    COMPILER(T_ELM2_LIST, SyntaxTreeElmList),
-    COMPILER(T_ELMX_LIST, SyntaxTreeElmList),
-    COMPILER(T_ASS2_LIST, SyntaxTreeAssList),
-    COMPILER(T_ASSX_LIST, SyntaxTreeAssList)
 };
 
 Obj FuncSYNTAX_TREE(Obj self, Obj func)
@@ -915,7 +901,7 @@ static Int InitKernel(StructInitInfo * module)
 
     /* TODO: Needed? Cleaner? Remove? */
     /* check TNUMS table */
-    for (i = 0; i < LAST_STAT_TNUM; i++) {
+    for (i = FIRST_STAT_TNUM; i < LAST_STAT_TNUM; i++) {
         if (!(StatCompilers[i].tnum == i)) {
             fprintf(stderr, "Warning, statement tnum desync %jd %jd %s\n",
                     StatCompilers[i].tnum, i, StatCompilers[i].name);
