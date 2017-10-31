@@ -2109,6 +2109,9 @@ end);
 InstallMethod(SocleTypePrimitiveGroup,"primitive permgroups",true,
   [IsPermGroup],0,function(G)
 local s,cs,t,id,r;
+  if not IsPrimitive(G,dom) then
+    Error("<G> must be primitive");
+  fi;
   s:=Socle(G);
   cs:=CompositionSeries(s);
   t:=cs[Length(cs)-1];
