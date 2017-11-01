@@ -1768,7 +1768,7 @@ local gens, one, dom,DoBlocks,pool,subo;
           Minimum(List(gens,SmallestMovedPoint)));
   dom:=Union(subo);
   if not IsTransitive(g,dom) then
-    Error("AllBlocks, must be transitive");
+    Error("AllBlocks, <g> must be transitive");
   fi;
   pool:=[];
   return DoBlocks(subo[1]);
@@ -2109,7 +2109,7 @@ end);
 InstallMethod(SocleTypePrimitiveGroup,"primitive permgroups",true,
   [IsPermGroup],0,function(G)
 local s,cs,t,id,r;
-  if not IsPrimitive(G,dom) then
+  if not IsPrimitive(G) then
     Error("<G> must be primitive");
   fi;
   s:=Socle(G);
