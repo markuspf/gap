@@ -9,6 +9,7 @@
 #include <src/vec8bit.h>
 #include <src/vecffe.h>
 #include <src/vecgf2.h>
+#include <src/syntaxtree.h>
 
 #ifdef HPCGAP
 #include <src/hpc/aobjects.h>
@@ -107,6 +108,9 @@ const InitInfoFunc InitFuncsBuiltinModules[] = {
 
     // objsets / objmaps
     InitInfoObjSets,
+
+    // Syntax Tree
+    InitInfoSyntaxTree,
 
 #ifdef HPCGAP
     /* threads                                                             */
