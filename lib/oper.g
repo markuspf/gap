@@ -150,17 +150,19 @@ BIND_GLOBAL( "NUMBERS_PROPERTY_GETTERS", [] );
 BIND_GLOBAL( "OPERATIONS", [] );
 BIND_GLOBAL( "OPER_DATA", rec() );
 BIND_GLOBAL( "STORE_OPER_DATA",
-function(oper, flags)
-  local nr, info;
+function(oper, flags, opt...)
+  local nr, info, data;
   nr := MASTER_POINTER_NUMBER(oper);
+
   if not IsBound(OPER_DATA.(nr)) then
     # we need a back link to oper for the post-restore function
-    OPER_DATA.(nr) := [oper, [], []];
+    OPER_DATA.(nr) := [ oper, [], [], [] ];
     ADD_LIST(OPERATIONS, oper);
   fi;
-  info := OPER_DATA.(nr);
-  ADD_LIST(info[2], MakeImmutable(flags));
-  ADD_LIST(info[3], MakeImmutable([INPUT_FILENAME(), INPUT_LINENUMBER()]));
+  data := OPER_DATA.(nr);
+  ADD_LIST(data[2], MakeImmutable(flags));
+  ADD_LIST(data[3], MakeImmutable([INPUT_FILENAME(), INPUT_LINENUMBER()]));
+  ADD_LIST(data[4], MakeImmutable(opt));
 end);
 
 BIND_GLOBAL( "GET_OPER_DATA", function(oper)
@@ -169,15 +171,34 @@ BIND_GLOBAL( "GET_OPER_DATA", function(oper)
   if not IsBound(OPER_DATA.(nr)) then
     return fail;
   fi;
-  return OPER_DATA.(nr)[2];
+  return OPER_DATA.(nr);
 end);
-BIND_GLOBAL( "GET_DECLARATION_LOCATIONS", function(oper)
-  local nr;
+
+BIND_GLOBAL( "GET_OPER_FLAGS", function(oper)
+  local nr, d, res;
   nr := MASTER_POINTER_NUMBER(oper);
   if not IsBound(OPER_DATA.(nr)) then
     return fail;
   fi;
+  return OPER_DATA.(nr)[2];
+end);
+
+BIND_GLOBAL( "GET_DECLARATION_LOCATIONS", function(oper)
+  local nr, d, res;
+  nr := MASTER_POINTER_NUMBER(oper);
+  if not IsBound(OPER_DATA.(nr)) then
+      return fail;
+  fi;
   return OPER_DATA.(nr)[3];
+end);
+
+BIND_GLOBAL( "GET_OPER_OPTS", function(oper)
+  local nr, d, res;
+  nr := MASTER_POINTER_NUMBER(oper);
+  if not IsBound(OPER_DATA.(nr)) then
+      return fail;
+  fi;
+  return OPER_DATA.(nr)[4];
 end);
 
 # the object handles change after loading a workspace
@@ -189,7 +210,7 @@ ADD_LIST(GAPInfo.PostRestoreFuncs, function()
     Unbind(OPER_DATA.(a));
   od;
   for a in tmp do
-    OPER_DATA.(MASTER_POINTER_NUMBER(a[1])) := a;
+    OPER_DATA.(MASTER_POINTER_NUMBER(a.oper)) := a;
   od;
 end);
 
@@ -814,8 +835,8 @@ BIND_GLOBAL( "DeclareOperation", function ( name, filters )
         fi;
         ADD_LIST( filt, FLAGS_FILTER( filter ) );
       od;
-      
-      req := GET_OPER_DATA(gvar);
+
+      req := GET_OPER_FLAGS(gvar);
       if filt in req then
         if not REREADING then
           INFO_DEBUG( 1, "equal requirements in multiple declarations ",
@@ -1175,7 +1196,7 @@ BIND_GLOBAL( "NewAttribute", function ( arg )
     else
         rank := 1;
     fi;
-    STORE_OPER_DATA(getter, [ flags ]);
+    STORE_OPER_DATA(getter, [ flags ], rec( mutable := mutflag ));
 
     OPER_SetupAttribute(getter, flags, mutflag, filter, rank, name);
 
@@ -1231,7 +1252,7 @@ BIND_GLOBAL( "DeclareAttribute", function ( arg )
           
           # if `gvar' has no one argument declarations we can turn it into 
           # an attribute
-          req := GET_OPER_DATA(gvar);
+          req := GET_OPER_FLAGS(gvar);
           for reqs in req do
               if LENGTH(reqs)  = 1 then
                   Error( "operation `", name, "' has been declared as a one ",
@@ -1247,7 +1268,7 @@ BIND_GLOBAL( "DeclareAttribute", function ( arg )
           fi;
           
           flags := FLAGS_FILTER(filter);
-          STORE_OPER_DATA( gvar, [ FLAGS_FILTER( filter ) ] );
+          STORE_OPER_DATA( gvar, [ FLAGS_FILTER( filter ) ], rec( mutable := mutflag ) );
           
           # kernel magic for the conversion
           if mutflag then
@@ -1274,19 +1295,21 @@ BIND_GLOBAL( "DeclareAttribute", function ( arg )
     
               
       fi;
+      mutflag := LEN_LIST(arg) = 3 and arg[3] = "mutable";
 
       # Add the new requirements.
       filter:= arg[2];
       if not IS_OPERATION( filter ) then
         Error( "<filter> must be an operation" );
       fi;
-      STORE_OPER_DATA( gvar, [ FLAGS_FILTER( filter ) ] );
+      STORE_OPER_DATA( gvar, [ FLAGS_FILTER( filter ) ], rec( mutable := mutflag ) );
 
       # also set the extended range for the setter
-      req := GET_OPER_DATA( Setter(gvar) );
-      STORE_OPER_DATA( Setter(gvar), [ FLAGS_FILTER( filter), req[1][2] ] );
+      req := GET_OPER_FLAGS( Setter(gvar) );
+      STORE_OPER_DATA( Setter(gvar), [ FLAGS_FILTER( filter), req[1][2] ], rec( mutable := mutflag ) );
 
     else
+      mutflag := LEN_LIST(arg) = 3 and arg[3] = "mutable";
 
       # The attribute is new.
       attr:= CALL_FUNC_LIST( NewAttribute, arg );

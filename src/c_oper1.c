@@ -1,7 +1,7 @@
 #ifndef AVOID_PRECOMPILED
 /* C file produced by GAC */
 #include <src/compiled.h>
-#define FILE_CRC  "-24567000"
+#define FILE_CRC  "-80821248"
 
 /* global variables used in handlers */
 static GVar G_REREADING;
@@ -68,6 +68,8 @@ static GVar G_DO__NOTHING__SETTER;
 static Obj  GC_DO__NOTHING__SETTER;
 static GVar G_QUO__INT;
 static Obj  GF_QUO__INT;
+static GVar G_fail;
+static Obj  GC_fail;
 static GVar G_RETURN__TRUE;
 static Obj  GC_RETURN__TRUE;
 static GVar G_RETURN__FALSE;
@@ -114,8 +116,8 @@ static GVar G_WRAPPER__OPERATIONS;
 static Obj  GC_WRAPPER__OPERATIONS;
 static GVar G_INFO__DEBUG;
 static Obj  GF_INFO__DEBUG;
-static GVar G_GET__OPER__DATA;
-static Obj  GF_GET__OPER__DATA;
+static GVar G_GET__OPER__FLAGS;
+static Obj  GF_GET__OPER__FLAGS;
 static GVar G_NamesFilter;
 static Obj  GF_NamesFilter;
 static GVar G_Ordinal;
@@ -1725,14 +1727,15 @@ static Obj  HdlrFunc6 (
   }
   /* fi */
   
-  /* req := GET_OPER_DATA( opr ); */
-  t_2 = GF_GET__OPER__DATA;
+  /* req := GET_OPER_FLAGS( opr ); */
+  t_2 = GF_GET__OPER__FLAGS;
   t_1 = CALL_1ARGS( t_2, l_opr );
   CHECK_FUNC_RESULT( t_1 )
   l_req = t_1;
   
-  /* if req = false then */
-  t_2 = False;
+  /* if req = fail then */
+  t_2 = GC_fail;
+  CHECK_BOUND( t_2, "fail" )
   t_1 = (Obj)(UInt)(EQ( l_req, t_2 ));
   if ( t_1 ) {
    
@@ -3915,8 +3918,8 @@ static Obj  HdlrFunc1 (
           if opr in WRAPPER_OPERATIONS then
               INFO_DEBUG( 1, "a method is installed for the wrapper operation ", NAME_FUNC( opr ), "\n", "#I  probably it should be installed for (one of) its\n", "#I  underlying operation(s)" );
           fi;
-          req := GET_OPER_DATA( opr );
-          if req = false then
+          req := GET_OPER_FLAGS( opr );
+          if req = fail then
               Error( "unknown operation ", NAME_FUNC( opr ) );
           fi;
           imp := [  ];
@@ -4284,6 +4287,7 @@ static Int PostRestore ( StructInitInfo * module )
  G_CHANGED__METHODS__OPERATION = GVarName( "CHANGED_METHODS_OPERATION" );
  G_DO__NOTHING__SETTER = GVarName( "DO_NOTHING_SETTER" );
  G_QUO__INT = GVarName( "QUO_INT" );
+ G_fail = GVarName( "fail" );
  G_RETURN__TRUE = GVarName( "RETURN_TRUE" );
  G_RETURN__FALSE = GVarName( "RETURN_FALSE" );
  G_LEN__LIST = GVarName( "LEN_LIST" );
@@ -4307,7 +4311,7 @@ static Int PostRestore ( StructInitInfo * module )
  G_EvalString = GVarName( "EvalString" );
  G_WRAPPER__OPERATIONS = GVarName( "WRAPPER_OPERATIONS" );
  G_INFO__DEBUG = GVarName( "INFO_DEBUG" );
- G_GET__OPER__DATA = GVarName( "GET_OPER_DATA" );
+ G_GET__OPER__FLAGS = GVarName( "GET_OPER_FLAGS" );
  G_NamesFilter = GVarName( "NamesFilter" );
  G_Ordinal = GVarName( "Ordinal" );
  G_INSTALL__METHOD__FLAGS = GVarName( "INSTALL_METHOD_FLAGS" );
@@ -4392,6 +4396,7 @@ static Int InitKernel ( StructInitInfo * module )
  InitFopyGVar( "CHANGED_METHODS_OPERATION", &GF_CHANGED__METHODS__OPERATION );
  InitCopyGVar( "DO_NOTHING_SETTER", &GC_DO__NOTHING__SETTER );
  InitFopyGVar( "QUO_INT", &GF_QUO__INT );
+ InitCopyGVar( "fail", &GC_fail );
  InitCopyGVar( "RETURN_TRUE", &GC_RETURN__TRUE );
  InitCopyGVar( "RETURN_FALSE", &GC_RETURN__FALSE );
  InitFopyGVar( "LEN_LIST", &GF_LEN__LIST );
@@ -4415,7 +4420,7 @@ static Int InitKernel ( StructInitInfo * module )
  InitFopyGVar( "EvalString", &GF_EvalString );
  InitCopyGVar( "WRAPPER_OPERATIONS", &GC_WRAPPER__OPERATIONS );
  InitFopyGVar( "INFO_DEBUG", &GF_INFO__DEBUG );
- InitFopyGVar( "GET_OPER_DATA", &GF_GET__OPER__DATA );
+ InitFopyGVar( "GET_OPER_FLAGS", &GF_GET__OPER__FLAGS );
  InitFopyGVar( "NamesFilter", &GF_NamesFilter );
  InitFopyGVar( "Ordinal", &GF_Ordinal );
  InitFopyGVar( "INSTALL_METHOD_FLAGS", &GF_INSTALL__METHOD__FLAGS );
@@ -4507,7 +4512,7 @@ static Int InitLibrary ( StructInitInfo * module )
 static StructInitInfo module = {
  .type        = MODULE_STATIC,
  .name        = "GAPROOT/lib/oper1.g",
- .crc         = -24567000,
+ .crc         = -80821248,
  .initKernel  = InitKernel,
  .initLibrary = InitLibrary,
  .postRestore = PostRestore,
