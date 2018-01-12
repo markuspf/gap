@@ -1,7 +1,7 @@
 #ifndef AVOID_PRECOMPILED
 /* C file produced by GAC */
 #include <src/compiled.h>
-#define FILE_CRC  "130680522"
+#define FILE_CRC  "-24567000"
 
 /* global variables used in handlers */
 static GVar G_REREADING;
@@ -114,8 +114,8 @@ static GVar G_WRAPPER__OPERATIONS;
 static Obj  GC_WRAPPER__OPERATIONS;
 static GVar G_INFO__DEBUG;
 static Obj  GF_INFO__DEBUG;
-static GVar G_GET__OPER__FLAGS;
-static Obj  GF_GET__OPER__FLAGS;
+static GVar G_GET__OPER__DATA;
+static Obj  GF_GET__OPER__DATA;
 static GVar G_NamesFilter;
 static Obj  GF_NamesFilter;
 static GVar G_Ordinal;
@@ -1725,8 +1725,8 @@ static Obj  HdlrFunc6 (
   }
   /* fi */
   
-  /* req := GET_OPER_FLAGS( opr ); */
-  t_2 = GF_GET__OPER__FLAGS;
+  /* req := GET_OPER_DATA( opr ); */
+  t_2 = GF_GET__OPER__DATA;
   t_1 = CALL_1ARGS( t_2, l_opr );
   CHECK_FUNC_RESULT( t_1 )
   l_req = t_1;
@@ -3915,7 +3915,7 @@ static Obj  HdlrFunc1 (
           if opr in WRAPPER_OPERATIONS then
               INFO_DEBUG( 1, "a method is installed for the wrapper operation ", NAME_FUNC( opr ), "\n", "#I  probably it should be installed for (one of) its\n", "#I  underlying operation(s)" );
           fi;
-          req := GET_OPER_FLAGS( opr );
+          req := GET_OPER_DATA( opr );
           if req = false then
               Error( "unknown operation ", NAME_FUNC( opr ) );
           fi;
@@ -4307,7 +4307,7 @@ static Int PostRestore ( StructInitInfo * module )
  G_EvalString = GVarName( "EvalString" );
  G_WRAPPER__OPERATIONS = GVarName( "WRAPPER_OPERATIONS" );
  G_INFO__DEBUG = GVarName( "INFO_DEBUG" );
- G_GET__OPER__FLAGS = GVarName( "GET_OPER_FLAGS" );
+ G_GET__OPER__DATA = GVarName( "GET_OPER_DATA" );
  G_NamesFilter = GVarName( "NamesFilter" );
  G_Ordinal = GVarName( "Ordinal" );
  G_INSTALL__METHOD__FLAGS = GVarName( "INSTALL_METHOD_FLAGS" );
@@ -4415,7 +4415,7 @@ static Int InitKernel ( StructInitInfo * module )
  InitFopyGVar( "EvalString", &GF_EvalString );
  InitCopyGVar( "WRAPPER_OPERATIONS", &GC_WRAPPER__OPERATIONS );
  InitFopyGVar( "INFO_DEBUG", &GF_INFO__DEBUG );
- InitFopyGVar( "GET_OPER_FLAGS", &GF_GET__OPER__FLAGS );
+ InitFopyGVar( "GET_OPER_DATA", &GF_GET__OPER__DATA );
  InitFopyGVar( "NamesFilter", &GF_NamesFilter );
  InitFopyGVar( "Ordinal", &GF_Ordinal );
  InitFopyGVar( "INSTALL_METHOD_FLAGS", &GF_INSTALL__METHOD__FLAGS );
@@ -4507,7 +4507,7 @@ static Int InitLibrary ( StructInitInfo * module )
 static StructInitInfo module = {
  .type        = MODULE_STATIC,
  .name        = "GAPROOT/lib/oper1.g",
- .crc         = 130680522,
+ .crc         = -24567000,
  .initKernel  = InitKernel,
  .initLibrary = InitLibrary,
  .postRestore = PostRestore,
