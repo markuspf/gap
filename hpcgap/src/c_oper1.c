@@ -1,7 +1,7 @@
 #ifndef AVOID_PRECOMPILED
 /* C file produced by GAC */
 #include <src/compiled.h>
-#define FILE_CRC  "81317498"
+#define FILE_CRC  "102816013"
 
 /* global variables used in handlers */
 static GVar G_REREADING;
@@ -68,6 +68,8 @@ static GVar G_DO__NOTHING__SETTER;
 static Obj  GC_DO__NOTHING__SETTER;
 static GVar G_QUO__INT;
 static Obj  GF_QUO__INT;
+static GVar G_fail;
+static Obj  GC_fail;
 static GVar G_RETURN__TRUE;
 static Obj  GC_RETURN__TRUE;
 static GVar G_RETURN__FALSE;
@@ -82,16 +84,6 @@ static GVar G_Print;
 static Obj  GF_Print;
 static GVar G_ViewObj;
 static Obj  GC_ViewObj;
-static GVar G_DO__LOCK;
-static Obj  GF_DO__LOCK;
-static GVar G_WRITE__LOCK;
-static Obj  GF_WRITE__LOCK;
-static GVar G_READ__LOCK;
-static Obj  GF_READ__LOCK;
-static GVar G_UNLOCK;
-static Obj  GF_UNLOCK;
-static GVar G_MakeReadOnlySingleObj;
-static Obj  GF_MakeReadOnlySingleObj;
 static GVar G_RUN__IMMEDIATE__METHODS__CHECKS;
 static Obj  GC_RUN__IMMEDIATE__METHODS__CHECKS;
 static GVar G_RUN__IMMEDIATE__METHODS__HITS;
@@ -110,6 +102,8 @@ static GVar G_TRACE__IMMEDIATE__METHODS;
 static Obj  GC_TRACE__IMMEDIATE__METHODS;
 static GVar G_NewSpecialRegion;
 static Obj  GF_NewSpecialRegion;
+static GVar G_WRITE__LOCK;
+static Obj  GF_WRITE__LOCK;
 static GVar G_METHODS__OPERATION__REGION;
 static Obj  GC_METHODS__OPERATION__REGION;
 static GVar G_IS__CONSTRUCTOR;
@@ -118,10 +112,16 @@ static GVar G_RankFilter;
 static Obj  GF_RankFilter;
 static GVar G_CHECK__INSTALL__METHOD;
 static Obj  GC_CHECK__INSTALL__METHOD;
+static GVar G_MakeReadOnlySingleObj;
+static Obj  GF_MakeReadOnlySingleObj;
+static GVar G_UNLOCK;
+static Obj  GF_UNLOCK;
 static GVar G_INSTALL__METHOD;
 static Obj  GF_INSTALL__METHOD;
 static GVar G_DeclareGlobalFunction;
 static Obj  GF_DeclareGlobalFunction;
+static GVar G_READ__LOCK;
+static Obj  GF_READ__LOCK;
 static GVar G_OPERATIONS__REGION;
 static Obj  GC_OPERATIONS__REGION;
 static GVar G_EvalString;
@@ -142,6 +142,8 @@ static GVar G_LENGTH__SETTER__METHODS__2;
 static Obj  GC_LENGTH__SETTER__METHODS__2;
 static GVar G_InstallAttributeFunction;
 static Obj  GF_InstallAttributeFunction;
+static GVar G_DO__LOCK;
+static Obj  GF_DO__LOCK;
 static GVar G_FILTER__REGION;
 static Obj  GC_FILTER__REGION;
 static GVar G_CATS__AND__REPS;
@@ -1782,8 +1784,9 @@ static Obj  HdlrFunc6 (
   CHECK_FUNC_RESULT( t_1 )
   l_req = t_1;
   
-  /* if req = false then */
-  t_2 = False;
+  /* if req = fail then */
+  t_2 = GC_fail;
+  CHECK_BOUND( t_2, "fail" )
   t_1 = (Obj)(UInt)(EQ( l_req, t_2 ));
   if ( t_1 ) {
    
@@ -4013,7 +4016,7 @@ static Obj  HdlrFunc1 (
               INFO_DEBUG( 1, "a method is installed for the wrapper operation ", NAME_FUNC( opr ), "\n", "#I  probably it should be installed for (one of) its\n", "#I  underlying operation(s)" );
           fi;
           req := GET_OPER_FLAGS( opr );
-          if req = false then
+          if req = fail then
               Error( "unknown operation ", NAME_FUNC( opr ) );
           fi;
           imp := [  ];
@@ -4386,6 +4389,7 @@ static Int PostRestore ( StructInitInfo * module )
  G_SET__METHODS__OPERATION = GVarName( "SET_METHODS_OPERATION" );
  G_DO__NOTHING__SETTER = GVarName( "DO_NOTHING_SETTER" );
  G_QUO__INT = GVarName( "QUO_INT" );
+ G_fail = GVarName( "fail" );
  G_RETURN__TRUE = GVarName( "RETURN_TRUE" );
  G_RETURN__FALSE = GVarName( "RETURN_FALSE" );
  G_LEN__LIST = GVarName( "LEN_LIST" );
@@ -4393,11 +4397,6 @@ static Int PostRestore ( StructInitInfo * module )
  G_CONV__STRING = GVarName( "CONV_STRING" );
  G_Print = GVarName( "Print" );
  G_ViewObj = GVarName( "ViewObj" );
- G_DO__LOCK = GVarName( "DO_LOCK" );
- G_WRITE__LOCK = GVarName( "WRITE_LOCK" );
- G_READ__LOCK = GVarName( "READ_LOCK" );
- G_UNLOCK = GVarName( "UNLOCK" );
- G_MakeReadOnlySingleObj = GVarName( "MakeReadOnlySingleObj" );
  G_RUN__IMMEDIATE__METHODS__CHECKS = GVarName( "RUN_IMMEDIATE_METHODS_CHECKS" );
  G_RUN__IMMEDIATE__METHODS__HITS = GVarName( "RUN_IMMEDIATE_METHODS_HITS" );
  G_BIND__GLOBAL = GVarName( "BIND_GLOBAL" );
@@ -4407,12 +4406,16 @@ static Int PostRestore ( StructInitInfo * module )
  G_IMMEDIATE__METHODS = GVarName( "IMMEDIATE_METHODS" );
  G_TRACE__IMMEDIATE__METHODS = GVarName( "TRACE_IMMEDIATE_METHODS" );
  G_NewSpecialRegion = GVarName( "NewSpecialRegion" );
+ G_WRITE__LOCK = GVarName( "WRITE_LOCK" );
  G_METHODS__OPERATION__REGION = GVarName( "METHODS_OPERATION_REGION" );
  G_IS__CONSTRUCTOR = GVarName( "IS_CONSTRUCTOR" );
  G_RankFilter = GVarName( "RankFilter" );
  G_CHECK__INSTALL__METHOD = GVarName( "CHECK_INSTALL_METHOD" );
+ G_MakeReadOnlySingleObj = GVarName( "MakeReadOnlySingleObj" );
+ G_UNLOCK = GVarName( "UNLOCK" );
  G_INSTALL__METHOD = GVarName( "INSTALL_METHOD" );
  G_DeclareGlobalFunction = GVarName( "DeclareGlobalFunction" );
+ G_READ__LOCK = GVarName( "READ_LOCK" );
  G_OPERATIONS__REGION = GVarName( "OPERATIONS_REGION" );
  G_EvalString = GVarName( "EvalString" );
  G_WRAPPER__OPERATIONS = GVarName( "WRAPPER_OPERATIONS" );
@@ -4423,6 +4426,7 @@ static Int PostRestore ( StructInitInfo * module )
  G_INSTALL__METHOD__FLAGS = GVarName( "INSTALL_METHOD_FLAGS" );
  G_LENGTH__SETTER__METHODS__2 = GVarName( "LENGTH_SETTER_METHODS_2" );
  G_InstallAttributeFunction = GVarName( "InstallAttributeFunction" );
+ G_DO__LOCK = GVarName( "DO_LOCK" );
  G_FILTER__REGION = GVarName( "FILTER_REGION" );
  G_CATS__AND__REPS = GVarName( "CATS_AND_REPS" );
  G_FILTERS = GVarName( "FILTERS" );
@@ -4503,6 +4507,7 @@ static Int InitKernel ( StructInitInfo * module )
  InitFopyGVar( "SET_METHODS_OPERATION", &GF_SET__METHODS__OPERATION );
  InitCopyGVar( "DO_NOTHING_SETTER", &GC_DO__NOTHING__SETTER );
  InitFopyGVar( "QUO_INT", &GF_QUO__INT );
+ InitCopyGVar( "fail", &GC_fail );
  InitCopyGVar( "RETURN_TRUE", &GC_RETURN__TRUE );
  InitCopyGVar( "RETURN_FALSE", &GC_RETURN__FALSE );
  InitFopyGVar( "LEN_LIST", &GF_LEN__LIST );
@@ -4510,11 +4515,6 @@ static Int InitKernel ( StructInitInfo * module )
  InitFopyGVar( "CONV_STRING", &GF_CONV__STRING );
  InitFopyGVar( "Print", &GF_Print );
  InitCopyGVar( "ViewObj", &GC_ViewObj );
- InitFopyGVar( "DO_LOCK", &GF_DO__LOCK );
- InitFopyGVar( "WRITE_LOCK", &GF_WRITE__LOCK );
- InitFopyGVar( "READ_LOCK", &GF_READ__LOCK );
- InitFopyGVar( "UNLOCK", &GF_UNLOCK );
- InitFopyGVar( "MakeReadOnlySingleObj", &GF_MakeReadOnlySingleObj );
  InitCopyGVar( "RUN_IMMEDIATE_METHODS_CHECKS", &GC_RUN__IMMEDIATE__METHODS__CHECKS );
  InitCopyGVar( "RUN_IMMEDIATE_METHODS_HITS", &GC_RUN__IMMEDIATE__METHODS__HITS );
  InitFopyGVar( "BIND_GLOBAL", &GF_BIND__GLOBAL );
@@ -4524,12 +4524,16 @@ static Int InitKernel ( StructInitInfo * module )
  InitCopyGVar( "IMMEDIATE_METHODS", &GC_IMMEDIATE__METHODS );
  InitCopyGVar( "TRACE_IMMEDIATE_METHODS", &GC_TRACE__IMMEDIATE__METHODS );
  InitFopyGVar( "NewSpecialRegion", &GF_NewSpecialRegion );
+ InitFopyGVar( "WRITE_LOCK", &GF_WRITE__LOCK );
  InitCopyGVar( "METHODS_OPERATION_REGION", &GC_METHODS__OPERATION__REGION );
  InitFopyGVar( "IS_CONSTRUCTOR", &GF_IS__CONSTRUCTOR );
  InitFopyGVar( "RankFilter", &GF_RankFilter );
  InitCopyGVar( "CHECK_INSTALL_METHOD", &GC_CHECK__INSTALL__METHOD );
+ InitFopyGVar( "MakeReadOnlySingleObj", &GF_MakeReadOnlySingleObj );
+ InitFopyGVar( "UNLOCK", &GF_UNLOCK );
  InitFopyGVar( "INSTALL_METHOD", &GF_INSTALL__METHOD );
  InitFopyGVar( "DeclareGlobalFunction", &GF_DeclareGlobalFunction );
+ InitFopyGVar( "READ_LOCK", &GF_READ__LOCK );
  InitCopyGVar( "OPERATIONS_REGION", &GC_OPERATIONS__REGION );
  InitFopyGVar( "EvalString", &GF_EvalString );
  InitCopyGVar( "WRAPPER_OPERATIONS", &GC_WRAPPER__OPERATIONS );
@@ -4540,6 +4544,7 @@ static Int InitKernel ( StructInitInfo * module )
  InitFopyGVar( "INSTALL_METHOD_FLAGS", &GF_INSTALL__METHOD__FLAGS );
  InitCopyGVar( "LENGTH_SETTER_METHODS_2", &GC_LENGTH__SETTER__METHODS__2 );
  InitFopyGVar( "InstallAttributeFunction", &GF_InstallAttributeFunction );
+ InitFopyGVar( "DO_LOCK", &GF_DO__LOCK );
  InitCopyGVar( "FILTER_REGION", &GC_FILTER__REGION );
  InitCopyGVar( "CATS_AND_REPS", &GC_CATS__AND__REPS );
  InitCopyGVar( "FILTERS", &GC_FILTERS );
@@ -4627,7 +4632,7 @@ static Int InitLibrary ( StructInitInfo * module )
 static StructInitInfo module = {
  .type        = MODULE_STATIC,
  .name        = "GAPROOT/lib/oper1.g",
- .crc         = 81317498,
+ .crc         = 102816013,
  .initKernel  = InitKernel,
  .initLibrary = InitLibrary,
  .postRestore = PostRestore,
