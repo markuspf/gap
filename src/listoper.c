@@ -2189,10 +2189,53 @@ static Obj  FuncMONOM_PROD( Obj self, Obj m1, Obj m2 ) {
     AddList(prod,ELM_PLIST(m2,i+1));
   }
   return prod;
-
 }
 
+/*
+ * This function folds the values in <list> into a single value
+ * by applying a simple divide-and-conquer algorithm, hence reducing
+ * the number of times that the binary function <func> needs to be
+ * executed.
+ */
+static Obj FuncFOLD_DIV_AND_CONQ(Obj self, Obj list, Obj func)
+{
+    if (!IS_DENSE_PLIST(list))
+      ErrorQuit("<list> is not a dense plist", 0L, 0L);
+    if (!IS_FUNC(func))
+      ErrorQuit("<func> must be a function", 0L, 0L);
 
+    const UInt len = LEN_PLIST(list);
+    if (len == 0) {
+      // TODO:
+    }
+    if (len == 1) {
+        return ELM_PLIST(list, 1);
+    }
+
+    UInt k = len;
+    UInt s = 1;
+    UInt i;
+    while (k > 1) {
+        const UInt r = k & 1;
+        const UInt old_s = s;
+        k >>= 1;
+        s <<= 1;
+
+        for (i = s; i <= k * s; i += s) {
+            GAP_ASSERT(i <= LEN_PLIST(list));
+            Obj x = ELM_PLIST(list, i - old_s);
+            Obj y = ELM_PLIST(list, i);
+            Obj z = CALL_2ARGS(func, x, y); 
+            AssPlist(list, i, z);
+        }
+        // at this point, i == (k+1)*s
+        if (r == 1) {
+            k++;
+            AssPlist(list, i, ELM_PLIST(list, i - old_s));
+        }
+    }
+    return ELM_PLIST(list, k * s);
+}
 
 
 /****************************************************************************
@@ -2246,6 +2289,7 @@ static StructGVarFunc GVarFuncs [] = {
     GVAR_FUNC(MONOM_GRLEX, 2, "monomial, monomial"),
     GVAR_FUNC(ZIPPED_SUM_LISTS, 4, "list,list,zero,funclist"),
     GVAR_FUNC(MONOM_PROD, 2, "monomial, monomial"),
+    GVAR_FUNC(FOLD_DIV_AND_CONQ, 2, "list, function"),
     { 0, 0, 0, 0, 0 }
 
 };
