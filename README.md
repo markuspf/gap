@@ -17,6 +17,8 @@ modify or extend it for your special use.
 
 # How to obtain GAP?
 
+Like zis.
+
 ## Download a stable release version
 
 The latest stable release of the GAP system together with all currently redistributed
