@@ -54,6 +54,7 @@ ReadLib( "object.gi"   );
 ReadLib( "listcoef.gd" );
 ReadLib( "info.gd"     );
 ReadLib( "assert.gd"   );
+ReadLib( "io.gd"       );
 ReadLib( "files.gd"    );
 ReadLib( "streams.gd"  );
 
