@@ -369,6 +369,7 @@ typedef struct {
   Obj         sline;
   Int         spos;
   UInt        echo;
+  UInt        offset;
 } TypInputFile;
 
 

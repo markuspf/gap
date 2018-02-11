@@ -23,6 +23,7 @@
 #include <src/gapstate.h>
 #include <src/gaputils.h>
 #include <src/gvars.h>
+#include <src/opers.h>
 #include <src/read.h>
 #include <src/scanner.h>
 #include <src/stringobj.h>
@@ -1725,33 +1726,37 @@ Obj FuncIS_OUTPUT_TTY(Obj self)
     return syBuf[STATE(Output)->file].isTTY ? True : False;
 }
 
+
+// FIXME: What about workspace support?
 Obj TYPE_OUTPUT_FILE;
 Obj TYPE_INPUT_FILE;
+Obj IsOutputFileContainer;
+Obj IsInputFileContainer;
 
 static inline TypOutputFile * ADDR_OUTPUT_FILE(Obj o)
 { return (TypOutputFile *)(ADDR_OBJ(o) + 1); }
 
+static inline UInt IS_OUTPUT_FILE_CONTAINER(Obj o)
+{ return (TNUM_OBJ(o)==T_DATOBJ && True == DoFilter(IsOutputFileContainer, o)); }
+
 static inline TypInputFile * ADDR_INPUT_FILE(Obj o)
 { return (TypInputFile *)(ADDR_OBJ(o) + 1); }
 
-static Obj FuncNEW_OUTPUT(Obj self, Obj filename)
-{
-    TypOutputFile *out;
-    Obj store;
-    Int file;
+static inline UInt IS_INPUT_FILE_CONTAINER(Obj o)
+{ return (TNUM_OBJ(o)==T_DATOBJ && True == DoFilter(IsInputFileContainer, o)); }
 
-    /*
-    file = SyFopen( filename, "w" );
-    if ( file == -1 )
-        return fail;
-    */
+/* Allocate a bag for a struct TypOutputFile */
+static Obj NewOutput(void)
+{
+    Obj store;
+    TypOutputFile *out;
 
     store = NewBag(T_DATOBJ, sizeof(TypOutputFile) + sizeof(Obj));
     SetTypeDatObj(store, TYPE_OUTPUT_FILE);
     out = ADDR_OUTPUT_FILE(store);
 
     /* start at position 0 on an empty line */
-    out->file = file;
+    out->file = -1;
     out->line[0] = '\0';
     out->pos = 0;
     out->indent = 0;
@@ -1764,40 +1769,211 @@ static Obj FuncNEW_OUTPUT(Obj self, Obj filename)
     return store;
 }
 
-static Obj FuncSAVE_OUTPUT(Obj self)
+static Obj OpenOutputFile(const Char * filename, const Char * mode)
 {
     Obj store;
+    TypOutputFile * out;
+    Int file;
 
-    store = NewBag(T_DATOBJ, sizeof(TypOutputFile) + sizeof(Obj));
-    SetTypeDatObj(store, TYPE_OUTPUT_FILE);
-    memcpy(ADDR_OUTPUT_FILE(store), STATE(Output), sizeof(TypOutputFile));
+    file = SyFopen(filename, mode);
+    if(file == -1)
+        return 0;
+
+    store = NewOutput();
+    out = ADDR_OUTPUT_FILE(store);
+
+    out->file = file;
 
     return store;
 }
 
-static Obj FuncRESTORE_OUTPUT(Obj self, Obj outputfile)
+static Obj OpenOutputStream(Obj stream)
 {
-    // FIXME: Input checks
-    if(TNUM_OBJ(outputfile) != T_DATOBJ)
-        ErrorMayQuit("invalid input", 0L, 0L);
+    Obj store;
+    TypOutputFile * out;
+    Int file;
 
-    memcpy(STATE(Output), ADDR_OUTPUT_FILE(outputfile), sizeof(TypOutputFile));
+    store = NewOutput();
+    out = ADDR_OUTPUT_FILE(store);
+
+    out->stream   = stream;
+    out->isstringstream = (CALL_1ARGS(IsStringStream, stream) == True);
+    out->format   = (CALL_1ARGS(PrintFormattingStatus, stream) == True);
+    out->line[0]  = '\0';
+    out->pos      = 0;
+    out->indent   = 0;
+    out->isstream = 1;
+
+    return store;
+}
+
+static Obj SaveOutput(void)
+{
+    Obj store = NewOutput();
+    memcpy(ADDR_OUTPUT_FILE(store), STATE(Output), sizeof(TypOutputFile));
+    return store;
+}
+
+static Obj SetOutput(Obj output)
+{
+    memcpy(STATE(Output), ADDR_OUTPUT_FILE(output), sizeof(TypOutputFile));
     return True;
+}
+
+/* Allocate a bag for a struct TypInputFile */
+static Obj NewInput(void)
+{
+    Obj store;
+    TypInputFile *in;
+
+    store = NewBag(T_DATOBJ, sizeof(TypInputFile) + sizeof(Obj));
+    SetTypeDatObj(store, TYPE_INPUT_FILE);
+    in = ADDR_INPUT_FILE(store);
+
+    /* start at position 0 on an empty line */
+    in->file = -1;
+    in->line[0] = '\0';
+    in->isstream = 0;
+    in->isstringstream = 0;
+    in->echo = 0;
+    in->gapnameid = 0;
+
+    return store;
+}
+
+static Obj OpenInputFile(const Char * filename, const Char * mode)
+{
+    Obj store;
+    TypInputFile *in;
+    Int file;
+
+    file = SyFopen(filename, mode);
+    if(file == -1)
+        return fail;
+
+    store = NewInput();
+    in = ADDR_INPUT_FILE(store);
+    in->file = file;
+
+    return store;
+}
+
+static Obj OpenInputStream(Obj stream)
+{
+    Obj store;
+    TypInputFile *in;
+    Int file;
+
+    store = NewInput();
+    in = ADDR_INPUT_FILE(store);
+
+    in->isstream = 1;
+    in->stream = stream;
+    in->isstringstream = (CALL_1ARGS(IsStringStream, stream) == True);
+    if(in->isstringstream) {
+        in->sline = CONST_ADDR_OBJ(stream)[2];
+        in->spos = INT_INTOBJ(CONST_ADDR_OBJ(stream)[1]);
+    } else {
+        in->sline = 0;
+    }
+    in->file = -1;
+    strlcpy( in->name, "stream", sizeof(in->name) );
+    in->gapnameid = 0;
+    in->offset = 0;
+    in->symbol = S_ILLEGAL;
+
+    /* indicate success                                                    */
+    return store;
+}
+
+static Obj SaveInput(void)
+{
+    Obj store = NewInput();
+    TypInputFile *in = ADDR_INPUT_FILE(store);
+
+    memcpy(in, STATE(Input), sizeof(TypInputFile));
+    /* Line points into input, and input moves,
+       so we store the relative position.
+       TODO: Check that no push-back thing is stored
+             in STATE(In)
+     */
+
+    in->offset = (STATE(In) - STATE(Input)->line);
+    in->symbol = STATE(Symbol);
+
+    return store;
+}
+
+static Obj CloseInput(Obj input)
+{
+    
+}
+
+static Obj SetInput(Obj input)
+{
+    memcpy(STATE(Input), ADDR_OUTPUT_FILE(input), sizeof(TypInputFile));
+
+    /* Restore relative position */
+    STATE(In) = &STATE(Input)->line[STATE(Input)->offset];
+
+    return True;
+}
+
+/* GAP-Level interface code */
+static Obj FuncSAVE_OUTPUT(Obj self)
+{
+    return SaveOutput();
+}
+
+static Obj FuncSET_OUTPUT_(Obj self, Obj outputfile)
+{
+    if(!IS_OUTPUT_FILE_CONTAINER(outputfile))
+        ErrorMayQuit("<outputfile> has to be an output file container", 0L, 0L);
+
+    return SetOutput(outputfile);
+}
+
+static Obj FuncOPEN_OUTPUT_FILE(Obj self, Obj filename, Obj mode)
+{
+    // CSTR_STRING is ok(?), because no GC is happening before
+    // SyFileOpen is called. probably not too great this way, though
+    // TODO: Input parameter checks
+    return OpenOutputAppend(CSTR_STRING(filename), CSTR_STRING(mode));
+}
+
+static Obj FuncOPEN_OUTPUT_STREAM(Obj self, Obj stream)
+{
+    return OpenOutputStream(stream);
+}
+
+static Obj FuncCLOSE_OUTPUT(Obj self, Obj outputfile)
+{
+    // close output and invalidate container
+    // make sure this cannot be set as input anymore?
 }
 
 static Obj FuncSAVE_INPUT(Obj self)
 {
-    Obj store;
-
-    store = NewBag(T_DATOBJ, sizeof(TypInputFile) + sizeof(Obj));
-    SetTypeDatObj(store, TYPE_INPUT_FILE);
-
-    return store;
+    return SaveInput();
 }
 
-static Obj FuncRESTORE_INPUT(Obj self, Obj inputfile)
+static Obj FuncSET_INPUT(Obj self, Obj inputfile)
 {
+    if(!IS_INPUT_FILE_CONTAINER(inputfile))
+        ErrorMayQuit("<inputfile> has to be an input file container", 0L, 0L);
+
+    SetInput(inputfile);
     return True;
+}
+
+static Obj FuncOPEN_INPUT_FILE(Obj self, Obj filename)
+{
+    return 0;
+}
+
+static Obj FuncOPEN_INPUT_STREAM(Obj self, Obj stream)
+{
+    return 0;
 }
 
 static StructGVarFunc GVarFuncs [] = {
@@ -1811,9 +1987,13 @@ static StructGVarFunc GVarFuncs [] = {
     GVAR_FUNC(IS_INPUT_TTY, 0, ""),
     GVAR_FUNC(IS_OUTPUT_TTY, 0, ""),
     GVAR_FUNC(SAVE_OUTPUT, 0, ""),
-    GVAR_FUNC(RESTORE_OUTPUT, 1, "outputfile"),
+    GVAR_FUNC(SET_OUTPUT_, 1, "outputfile"),
+    GVAR_FUNC(OPEN_OUTPUT_FILE, 2, "filename, mode"),
+    GVAR_FUNC(OPEN_OUTPUT_STREAM, 1, "stream"),
     GVAR_FUNC(SAVE_INPUT, 0, ""),
-    GVAR_FUNC(RESTORE_INPUT, 1, "inputfile"),
+    GVAR_FUNC(SET_INPUT, 1, "inputfile"),
+    GVAR_FUNC(OPEN_INPUT_FILE, 1, "filename"),
+    GVAR_FUNC(OPEN_INPUT_STREAM, 1, "stream"),
     { 0, 0, 0, 0, 0 }
 
 };
@@ -1893,8 +2073,10 @@ static Int InitKernel (
     InitCopyGVar( "EndLineHook", &EndLineHook );
     InitFopyGVar( "PrintFormattingStatus", &PrintFormattingStatus);
 
-    ImportGVarFromLibrary("TYPE_OUTPUT_FILE", &TYPE_OUTPUT_FILE);
-    ImportGVarFromLibrary("TYPE_INPUT_FILE", &TYPE_INPUT_FILE);
+    ImportGVarFromLibrary("TYPE_OUTPUT_FILE_CONTAINER", &TYPE_OUTPUT_FILE);
+    ImportGVarFromLibrary("TYPE_INPUT_FILE_CONTAINER", &TYPE_INPUT_FILE);
+    ImportGVarFromLibrary("IsOutputFileContainer", &IsOutputFileContainer);
+    ImportGVarFromLibrary("IsInputFileContainer", &IsInputFileContainer);
 
     InitHdlrFuncsFromTable( GVarFuncs );
     /* return success                                                      */
