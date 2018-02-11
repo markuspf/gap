@@ -1347,6 +1347,11 @@ DeclareGlobalFunction( "UnInstallCharReadHookFunc" );
 DeclareGlobalFunction( "InputFromUser" );
 
 
+# FIXME: These should go into io.gd/io.gi
+DeclareGlobalVariable( "TYPE_OUTPUT_FILE" );
+DeclareGlobalVariable( "TYPE_INPUT_FILE" );
+
+
 #############################################################################
 ##
 #E

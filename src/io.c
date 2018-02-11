@@ -1725,6 +1725,81 @@ Obj FuncIS_OUTPUT_TTY(Obj self)
     return syBuf[STATE(Output)->file].isTTY ? True : False;
 }
 
+Obj TYPE_OUTPUT_FILE;
+Obj TYPE_INPUT_FILE;
+
+static inline TypOutputFile * ADDR_OUTPUT_FILE(Obj o)
+{ return (TypOutputFile *)(ADDR_OBJ(o) + 1); }
+
+static inline TypInputFile * ADDR_INPUT_FILE(Obj o)
+{ return (TypInputFile *)(ADDR_OBJ(o) + 1); }
+
+static Obj FuncNEW_OUTPUT(Obj self, Obj filename)
+{
+    TypOutputFile *out;
+    Obj store;
+    Int file;
+
+    /*
+    file = SyFopen( filename, "w" );
+    if ( file == -1 )
+        return fail;
+    */
+
+    store = NewBag(T_DATOBJ, sizeof(TypOutputFile) + sizeof(Obj));
+    SetTypeDatObj(store, TYPE_OUTPUT_FILE);
+    out = ADDR_OUTPUT_FILE(store);
+
+    /* start at position 0 on an empty line */
+    out->file = file;
+    out->line[0] = '\0';
+    out->pos = 0;
+    out->indent = 0;
+    out->isstream = 0;
+    out->format = 1;
+
+    /* variables related to line splitting, very bad place to split */
+    out->hints[0] = -1;
+
+    return store;
+}
+
+static Obj FuncSAVE_OUTPUT(Obj self)
+{
+    Obj store;
+
+    store = NewBag(T_DATOBJ, sizeof(TypOutputFile) + sizeof(Obj));
+    SetTypeDatObj(store, TYPE_OUTPUT_FILE);
+    memcpy(ADDR_OUTPUT_FILE(store), STATE(Output), sizeof(TypOutputFile));
+
+    return store;
+}
+
+static Obj FuncRESTORE_OUTPUT(Obj self, Obj outputfile)
+{
+    // FIXME: Input checks
+    if(TNUM_OBJ(outputfile) != T_DATOBJ)
+        ErrorMayQuit("invalid input", 0L, 0L);
+
+    memcpy(STATE(Output), ADDR_OUTPUT_FILE(outputfile), sizeof(TypOutputFile));
+    return True;
+}
+
+static Obj FuncSAVE_INPUT(Obj self)
+{
+    Obj store;
+
+    store = NewBag(T_DATOBJ, sizeof(TypInputFile) + sizeof(Obj));
+    SetTypeDatObj(store, TYPE_INPUT_FILE);
+
+    return store;
+}
+
+static Obj FuncRESTORE_INPUT(Obj self, Obj inputfile)
+{
+    return True;
+}
+
 static StructGVarFunc GVarFuncs [] = {
 
     GVAR_FUNC(ToggleEcho, 0, ""),
@@ -1735,6 +1810,10 @@ static StructGVarFunc GVarFuncs [] = {
     GVAR_FUNC(SET_PRINT_FORMATTING_STDOUT, 1, "format"),
     GVAR_FUNC(IS_INPUT_TTY, 0, ""),
     GVAR_FUNC(IS_OUTPUT_TTY, 0, ""),
+    GVAR_FUNC(SAVE_OUTPUT, 0, ""),
+    GVAR_FUNC(RESTORE_OUTPUT, 1, "outputfile"),
+    GVAR_FUNC(SAVE_INPUT, 0, ""),
+    GVAR_FUNC(RESTORE_INPUT, 1, "inputfile"),
     { 0, 0, 0, 0, 0 }
 
 };
@@ -1813,6 +1892,9 @@ static Int InitKernel (
     InitCopyGVar( "PrintPromptHook", &PrintPromptHook );
     InitCopyGVar( "EndLineHook", &EndLineHook );
     InitFopyGVar( "PrintFormattingStatus", &PrintFormattingStatus);
+
+    ImportGVarFromLibrary("TYPE_OUTPUT_FILE", &TYPE_OUTPUT_FILE);
+    ImportGVarFromLibrary("TYPE_INPUT_FILE", &TYPE_INPUT_FILE);
 
     InitHdlrFuncsFromTable( GVarFuncs );
     /* return success                                                      */
