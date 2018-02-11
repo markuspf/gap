@@ -1797,6 +1797,15 @@ InstallGlobalFunction( "UnInstallCharReadHookFunc",
 Unbind(OnCharReadHookActive);
 
 
+BindGlobal("IO_OBJ_FAMILY", NewFamily("IO_OBJ_FAMILY"));
+DeclareCategory("IsInputFile", IsObject);
+DeclareCategory("IsOutputFile", IsObject);
+
+InstallValue( TYPE_OUTPUT_FILE, NewType(IO_OBJ_FAMILY, IsOutputFile));
+InstallValue( TYPE_INPUT_FILE, NewType(IO_OBJ_FAMILY, IsInputFile));
+
+
+
 #############################################################################
 ##
 #E
