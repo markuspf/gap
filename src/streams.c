@@ -140,7 +140,7 @@ Obj FuncREAD_ALL_COMMANDS( Obj self, Obj stream, Obj echo )
             }
         }
     } while(!(status & (STATUS_EOF | STATUS_QUIT | STATUS_QQUIT)));
-    CloseInput();
+    CloseCurrentInput();
     ClearError();
 
     return resultList;
@@ -170,7 +170,7 @@ Obj FuncREAD_COMMAND_REAL ( Obj self, Obj stream, Obj echo )
 
     status = READ_COMMAND(&evalResult);
     
-    CloseInput();
+    CloseCurrentInput();
 
     if( status == 0 ) return result;
 
@@ -252,7 +252,7 @@ static Int READ_INNER ( UInt UseUHQ )
 
 
     /* close the input file again, and return 'true'                       */
-    if ( ! CloseInput() ) {
+    if ( ! CloseCurrentInput() ) {
         ErrorQuit(
             "Panic: READ cannot close input, this should not happen",
             0L, 0L );
@@ -293,7 +293,7 @@ Obj READ_AS_FUNC ( void )
     Obj func = (type == 0) ? evalResult : Fail;
 
     /* close the input file again, and return 'true'                       */
-    if ( ! CloseInput() ) {
+    if ( ! CloseCurrentInput() ) {
         ErrorQuit(
             "Panic: READ_AS_FUNC cannot close input, this should not happen",
             0L, 0L );
@@ -368,7 +368,7 @@ static void READ_LOOP ( void )
     READ_TEST_OR_LOOP();
 
     /* close the input file again, and return 'true'                       */
-    if ( ! CloseInput() ) {
+    if ( ! CloseCurrentInput() ) {
         ErrorQuit(
             "Panic: ReadLoop cannot close input, this should not happen",
             0L, 0L );
@@ -456,7 +456,7 @@ Int READ_GAP_ROOT ( const Char * filename )
                     break;
                 }
             }
-            CloseInput();
+            CloseCurrentInput();
             ClearError();
             return 1;
         }
@@ -562,7 +562,7 @@ Obj FuncLOG_TO_STREAM (
 Obj FuncCLOSE_INPUT_LOG_TO (
     Obj                 self )
 {
-    if ( ! CloseInputLog() ) {
+    if ( ! CloseCurrentInputLog() ) {
         ErrorQuit("InputLogTo: can not close the logfile",0L,0L);
         return False;
     }
@@ -634,7 +634,7 @@ Obj FuncINPUT_LOG_TO_STREAM (
 Obj FuncCLOSE_OUTPUT_LOG_TO (
     Obj                 self )
 {
-    if ( ! CloseOutputLog() ) {
+    if ( ! CloseCurrentOutputLog() ) {
         ErrorQuit("OutputLogTo: can not close the logfile",0L,0L);
         return False;
     }
@@ -779,7 +779,7 @@ static Obj PRINT_OR_APPEND_TO(Obj args, int append)
                 PrintObj( arg );
             }
             CATCH_READ_ERROR {
-                CloseOutput();
+                CloseCurrentOutput();
                 memcpy( STATE(ReadJmpError), readJmpError, sizeof(syJmp_buf) );
                 ReadEvalError();
             }
@@ -788,7 +788,7 @@ static Obj PRINT_OR_APPEND_TO(Obj args, int append)
     }
 
     /* close the output file again, and return nothing                     */
-    if ( ! CloseOutput() ) {
+    if ( ! CloseCurrentOutput() ) {
         ErrorQuit( "%s: cannot close output", (Int)funcname, 0L );
         return 0;
     }
@@ -836,7 +836,7 @@ static Obj PRINT_OR_APPEND_TO_STREAM(Obj args, int append)
             }
         }
         CATCH_READ_ERROR {
-            CloseOutput();
+            CloseCurrentOutput();
             memcpy( STATE(ReadJmpError), readJmpError, sizeof(syJmp_buf) );
             ReadEvalError();
         }
@@ -844,7 +844,7 @@ static Obj PRINT_OR_APPEND_TO_STREAM(Obj args, int append)
     }
 
     /* close the output file again, and return nothing                     */
-    if ( ! CloseOutput() ) {
+    if ( ! CloseCurrentOutput() ) {
         ErrorQuit( "%s: cannot close output", (Int)funcname, 0L );
         return 0;
     }
@@ -944,7 +944,7 @@ Obj FuncSET_OUTPUT (
 Obj FuncSET_PREVIOUS_OUTPUT( Obj self ) {
     /* close the current output stream, and return nothing  */
 
-    if ( ! CloseOutput() ) {
+    if ( ! CloseCurrentOutput() ) {
         ErrorQuit( "SET_PREVIOUS_OUTPUT: cannot close output", 0L, 0L );
         return 0;
     }

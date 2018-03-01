@@ -197,7 +197,7 @@ Obj Shell ( Obj context,
 
   if(!OpenInput(inFile))
     {
-      CloseOutput();
+      CloseCurrentOutput();
       ErrorQuit("SHELL: can't open infile %s",(Int)inFile,0);
     }
   
@@ -301,8 +301,8 @@ Obj Shell ( Obj context,
   }
   
   STATE(PrintObjDepth) = oldPrintDepth;
-  CloseInput();
-  CloseOutput();
+  CloseCurrentInput();
+  CloseCurrentOutput();
   STATE(BaseShellContext) = oldBaseShellContext;
   STATE(ShellContext) = oldShellContext;
   STATE(ErrorLLevel) = oldErrorLLevel;

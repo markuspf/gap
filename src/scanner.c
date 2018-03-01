@@ -65,7 +65,7 @@ void SyntaxErrorOrWarning(const Char * msg, UInt error)
     }
 
     // close error output
-    CloseOutput();
+    CloseCurrentOutput();
 }
 
 

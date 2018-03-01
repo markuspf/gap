@@ -5718,7 +5718,7 @@ Int CompileFunc (
 
     /* close the output file                                               */
     SyNrCols = col;
-    CloseOutput();
+    CloseCurrentOutput();
 
     /* return success                                                      */
     return compFunctionsNr;

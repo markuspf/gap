@@ -7,9 +7,9 @@
 **
 **  These provide the concept of  a current input  and output file.   In the
 **  main   module   they are opened  and   closed  with the  'OpenInput'  and
-**  'CloseInput' respectively  'OpenOutput' and 'CloseOutput' calls.  All the
-**  other modules just read from the  current input  and write to the current
-**  output file.
+**  'CloseCurrentInput' respectively 'OpenOutput' and 'CloseCurrentOutput'
+**  calls. All the other modules just read from the current input and write to
+**  the current  output file.
 **
 **  This module relies on the functions  provided  by  the  operating  system
 **  dependent module 'system.c' for the low level input/output.
@@ -352,7 +352,7 @@ UInt OpenDefaultOutput( void )
 **
 **  'OpenInput' opens  the file with  the name <filename>  as  current input.
 **  All  subsequent input will  be taken from that  file, until it is  closed
-**  again  with 'CloseInput'  or  another file  is opened  with  'OpenInput'.
+**  again  with 'CloseCurrentInput'  or  another file  is opened  with  'OpenInput'.
 **  'OpenInput'  will not  close the  current  file, i.e., if  <filename>  is
 **  closed again, input will again be taken from the current input file.
 **
@@ -377,7 +377,7 @@ UInt OpenDefaultOutput( void )
 **
 **  It is not neccessary to open the initial input  file, 'InitScanner' opens
 **  '*stdin*' for  that purpose.  This  file on   the other   hand  cannot be
-**  closed by 'CloseInput'.
+**  closed by 'CloseCurrentInput'.
 */
 UInt OpenInput (
     const Char *        filename )
@@ -484,20 +484,20 @@ UInt OpenInputStream(Obj stream, UInt echo)
 
 /****************************************************************************
 **
-*F  CloseInput()  . . . . . . . . . . . . . . . . .  close current input file
+*F  CloseCurrentInput()  . . . . . . . . . . . . . . . . .  close current input file
 **
-**  'CloseInput'  will close the  current input file.   Subsequent input will
-**  again be taken from the previous input file.   'CloseInput' will return 1
+**  'CloseCurrentInput'  will close the  current input file.   Subsequent input will
+**  again be taken from the previous input file.   'CloseCurrentInput' will return 1
 **  to indicate success.
 **
-**  'CloseInput' will not close the initial input file '*stdin*', and returns
+**  'CloseCurrentInput' will not close the initial input file '*stdin*', and returns
 **  0  if such  an  attempt is made.   This is  used in  'Error'  which calls
-**  'CloseInput' until it returns 0, therebye closing all open input files.
+**  'CloseCurrentInput' until it returns 0, therebye closing all open input files.
 **
-**  Calling 'CloseInput' if the  corresponding  'OpenInput' call failed  will
+**  Calling 'CloseCurrentInput' if the  corresponding  'OpenInput' call failed  will
 **  close the current output file, which will lead to very strange behaviour.
 */
-UInt CloseInput ( void )
+UInt CloseCurrentInput ( void )
 {
     /* refuse to close the initial input file                              */
     if (IO()->InputStackPointer <= 1)
@@ -692,16 +692,16 @@ UInt OpenInputLogStream (
 
 /****************************************************************************
 **
-*F  CloseInputLog() . . . . . . . . . . . . . . . . close the current logfile
+*F  CloseCurrentInputLog() . . . . . . . . . . . . . . . . close the current logfile
 **
-**  'CloseInputLog'  closes  the current  logfile again,  so  that input from
+**  'CloseCurrentInputLog'  closes  the current  logfile again,  so  that input from
 **  '*stdin*'  and   '*errin*'  will  no  longer   be  echoed   to  a   file.
-**  'CloseInputLog' will return 1 to indicate success.
+**  'CloseCurrentInputLog' will return 1 to indicate success.
 **
-**  'CloseInputLog' will fail if there is no logfile active and will return 0
+**  'CloseCurrentInputLog' will fail if there is no logfile active and will return 0
 **  in this case.
 */
-UInt CloseInputLog ( void )
+UInt CloseCurrentInputLog ( void )
 {
     /* refuse to close a non existent logfile                              */
     if (IO()->InputLog == 0)
@@ -789,16 +789,16 @@ UInt OpenOutputLogStream (
 
 /****************************************************************************
 **
-*F  CloseOutputLog()  . . . . . . . . . . . . . . . close the current logfile
+*F  CloseCurrentOutputLog()  . . . . . . . . . . . . . . . close the current logfile
 **
-**  'CloseInputLog' closes   the current logfile   again, so  that output  to
+**  'CloseCurrentInputLog' closes   the current logfile   again, so  that output  to
 **  '*stdout*'  and    '*errout*'  will no   longer  be   echoed to  a  file.
-**  'CloseOutputLog' will return 1 to indicate success.
+**  'CloseCurrentOutputLog' will return 1 to indicate success.
 **
-**  'CloseOutputLog' will fail if there is  no logfile active and will return
+**  'CloseCurrentOutputLog' will fail if there is  no logfile active and will return
 **  0 in this case.
 */
-UInt CloseOutputLog ( void )
+UInt CloseCurrentOutputLog ( void )
 {
     /* refuse to close a non existent logfile                              */
     if (IO()->OutputLog == 0)
@@ -825,7 +825,7 @@ UInt CloseOutputLog ( void )
 **
 **  'OpenOutput' opens the file  with the name  <filename> as current output.
 **  All subsequent output will go  to that file, until either   it is  closed
-**  again  with 'CloseOutput' or  another  file is  opened with 'OpenOutput'.
+**  again  with 'CloseCurrentOutput' or  another  file is  opened with 'OpenOutput'.
 **  The file is truncated to size 0 if it existed, otherwise it  is  created.
 **  'OpenOutput' does not  close  the  current file, i.e., if  <filename>  is
 **  closed again, output will go again to the current output file.
@@ -844,7 +844,7 @@ UInt CloseOutputLog ( void )
 **
 **  It is not neccessary to open the initial output file, 'InitScanner' opens
 **  '*stdout*' for that purpose.  This  file  on the other hand   can not  be
-**  closed by 'CloseOutput'.
+**  closed by 'CloseCurrentOutput'.
 */
 UInt OpenOutput (
     const Char *        filename )
@@ -929,22 +929,22 @@ UInt OpenOutputStream (
 
 /****************************************************************************
 **
-*F  CloseOutput() . . . . . . . . . . . . . . . . . close current output file
+*F  CloseCurrentOutput() . . . . . . . . . . . . . . . . . close current output file
 **
-**  'CloseOutput' will  first flush all   pending output and  then  close the
+**  'CloseCurrentOutput' will  first flush all   pending output and  then  close the
 **  current  output  file.   Subsequent output will  again go to the previous
-**  output file.  'CloseOutput' returns 1 to indicate success.
+**  output file.  'CloseCurrentOutput' returns 1 to indicate success.
 **
-**  'CloseOutput' will  not  close the  initial output file   '*stdout*', and
+**  'CloseCurrentOutput' will  not  close the  initial output file   '*stdout*', and
 **  returns 0 if such attempt is made.  This  is  used in 'Error' which calls
-**  'CloseOutput' until it returns 0, thereby closing all open output files.
+**  'CloseCurrentOutput' until it returns 0, thereby closing all open output files.
 **
-**  Calling 'CloseOutput' if the corresponding 'OpenOutput' call failed  will
+**  Calling 'CloseCurrentOutput' if the corresponding 'OpenOutput' call failed  will
 **  close the current output file, which will lead to very strange behaviour.
-**  On the other  hand if you  forget  to call  'CloseOutput' at the end of a
+**  On the other  hand if you  forget  to call  'CloseCurrentOutput' at the end of a
 **  'PrintTo' call or an error will not yield much better results.
 */
-UInt CloseOutput ( void )
+UInt CloseCurrentOutput ( void )
 {
     // silently refuse to close the test output file; this is probably an
     // attempt to close *errout* which is silently not opened, so let's
@@ -982,7 +982,7 @@ UInt CloseOutput ( void )
 **
 **  'OpenAppend' opens the file  with the name  <filename> as current output.
 **  All subsequent output will go  to that file, until either   it is  closed
-**  again  with 'CloseOutput' or  another  file is  opened with 'OpenOutput'.
+**  again  with 'CloseCurrentOutput' or  another  file is  opened with 'OpenOutput'.
 **  Unlike 'OpenOutput' 'OpenAppend' does not truncate the file to size 0  if
 **  it exists.  Appart from that 'OpenAppend' is equal to 'OpenOutput' so its
 **  description applies to 'OpenAppend' too.
