@@ -305,11 +305,6 @@ Obj READ_AS_FUNC ( void )
     // ReadEvalFile returns 0 if no error happened
     func = (type == 0) ? evalResult : Fail;
 
-    /* close the input file again, and return 'true' */
-    if (!CloseInput())
-        ErrorQuit(
-            "READ_AS_FUNC cannot close input, this should not happen",
-            0L, 0L);
     ClearError();
 
     /* return the function */
@@ -1027,7 +1022,9 @@ Obj FuncREAD_AS_FUNC (
     Obj                 self,
     Obj                 filename )
 {
-    /* check the argument                                                  */
+    Obj func;
+
+    // check the argument
     while ( ! IsStringConv( filename ) ) {
         filename = ErrorReturnObj(
             "READ_AS_FUNC: <filename> must be a string (not a %s)",
@@ -1035,13 +1032,20 @@ Obj FuncREAD_AS_FUNC (
             "you can replace <filename> via 'return <filename>;'" );
     }
 
-    /* try to open the file                                                */
+    // try to open the file as scanner input
     if ( ! OpenInput( CSTR_STRING(filename) ) ) {
         return Fail;
     }
 
-    /* read the function                                                   */
-    return READ_AS_FUNC();
+    // read the function
+    func = READ_AS_FUNC();
+
+    // close the input again
+    if (!CloseInput())
+        ErrorQuit("READ_AS_FUNC cannot close input, this should not happen",
+                   0L, 0L);
+
+    return func;
 }
 
 
@@ -1053,13 +1057,22 @@ Obj FuncREAD_AS_FUNC_STREAM (
     Obj                 self,
     Obj                 stream )
 {
-    /* try to open the file                                                */
+    Obj func;
+
+    // try to open the stream as scanner input
     if (!OpenInputStream(stream, 0)) {
         return Fail;
     }
 
-    /* read the function                                                   */
-    return READ_AS_FUNC();
+    // read the function
+    func = READ_AS_FUNC();
+
+    // close the input again
+    if (!CloseInput())
+        ErrorQuit("READ_AS_FUNC cannot close input, this should not happen",
+                  0L, 0L);
+
+    return func;
 }
 
 
