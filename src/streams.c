@@ -323,43 +323,43 @@ static void READ_TEST_OR_LOOP(void)
     UInt                oldtime;
     UInt                dualSemicolon;
 
-    /* get the starting time                                               */
+    // get the starting time
     oldtime = SyTime();
 
-    /* now do the reading                                                  */
+    // now do the reading
     while ( 1 ) {
 
-        /* read and evaluate the command                                   */
+        // read and evaluate the command
         ClearError();
         Obj evalResult;
         type = ReadEvalCommand(STATE(BottomLVars), &evalResult, &dualSemicolon);
 
-        /* stop the stopwatch                                              */
+        // stop the stopwatch
         AssGVar( Time, INTOBJ_INT( SyTime() - oldtime ) );
 
-        /* handle ordinary command                                         */
+        // handle ordinary command
         if ( type == 0 && evalResult != 0 ) {
 
-            /* remember the value in 'last' and the time in 'time'         */
+            // remember the value in 'last' and the time in 'time'
             AssGVar( Last3, ValGVarTL( Last2 ) );
             AssGVar( Last2, ValGVarTL( Last  ) );
             AssGVar( Last, evalResult );
 
-            /* print the result                                            */
+            // print the result
             if ( ! dualSemicolon ) {
-                Bag currLVars = STATE(CurrLVars); /* in case view runs into error */
+                Bag currLVars = STATE(CurrLVars); // in case view runs into error
                 ViewObjHandler( evalResult );
                 SWITCH_TO_OLD_LVARS(currLVars);
             }
         }
 
-        /* handle return-value or return-void command                      */
+        // handle return-value or return-void command
         else if ( type & (STATUS_RETURN_VAL | STATUS_RETURN_VOID) ) {
             Pr( "'return' must not be used in file read-eval loop",
                 0L, 0L );
         }
 
-        /* handle quit command or <end-of-file>                            */
+        // handle quit command or <end-of-file>
         else if ( type & (STATUS_QUIT | STATUS_EOF) ) {
             break;
         }
