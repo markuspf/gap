@@ -200,7 +200,7 @@ Obj FuncREAD_COMMAND_REAL ( Obj self, Obj stream, Obj echo )
 
 static UInt LastReadValueGVar;
 
-static Int READ_INNER(UInt UseUHQ)
+static Obj READ_INNER(UInt UseUHQ)
 {
     if (STATE(UserHasQuit)) {
         Pr("Warning: Entering READ with UserHasQuit set, this should never "
@@ -248,30 +248,42 @@ static Int READ_INNER(UInt UseUHQ)
             MakeReadOnlyGVar(LastReadValueGVar);
         }
     }
-
-
-    /* close the input file again, and return 'true'                       */
-    if (!CloseInput()) {
-        ErrorQuit("Panic: READ cannot close input, this should not happen",
-                  0L, 0L);
-    }
     ClearError();
 
     if (!UseUHQ && STATE(UserHasQuit)) {
         STATE(UserHasQuit) = 0; /* stop recovery here */
-        return 2;
+        return Fail;
     }
 
-    return 1;
+    return True;
 }
 
+Obj ReadFromFile(Obj filename, Obj recover)
+{
+    Obj res;
 
-static Int READ( void ) {
-  return READ_INNER(1);
-}
+    /* check the argument */
+    while (!IsStringConv(filename)) {
+        filename = ErrorReturnObj(
+                                  "READ: <filename> must be a string (not a %s)",
+                                  (Int)TNAM_OBJ(filename), 0L,
+                                  "you can replace <filename> via 'return <filename>;'");
+    }
+    if (recover != True && recover != False)
+        ErrorQuit("READ: <recover> must be true or false", 0L, 0L);
 
-static Int READ_NORECOVERY( void ) {
-  return READ_INNER(0);
+    /* try to open the file */
+    if (!OpenInput(CSTR_STRING(filename)))
+        return False;
+
+    res = READ_INNER(recover == True ? 1 : 0);
+
+    if (!CloseInput()) {
+        ErrorQuit("cannot close input, this should not happen",
+                  0L, 0L);
+    }
+
+    return res;
 }
 
 /****************************************************************************
@@ -952,65 +964,24 @@ Obj FuncSET_PREVIOUS_OUTPUT( Obj self ) {
 /****************************************************************************
 **
 *F  FuncREAD( <self>, <filename> )  . . . . . . . . . . . . . . . read a file
-**
-**  Read the current input and close the input stream.
-*/
-Obj FuncREAD (
-    Obj                 self,
-    Obj                 filename )
-{
-   /* check the argument                                                  */
-    while ( ! IsStringConv( filename ) ) {
-        filename = ErrorReturnObj(
-            "READ: <filename> must be a string (not a %s)",
-            (Int)TNAM_OBJ(filename), 0L,
-            "you can replace <filename> via 'return <filename>;'" );
-    }
-
-    /* try to open the file                                                */
-    if ( ! OpenInput( CSTR_STRING(filename) ) ) {
-        return False;
-    }
-
-    /* read the test file                                                  */
-    return READ() ? True : False;
-}
-
-/****************************************************************************
-**
 *F  FuncREAD_NORECOVERY( <self>, <filename> )  . . .  . . . . . . read a file
 **
-** Read the current input and close the input stream. Disable the normal 
-** mechanism which ensures that quitting from a break loop gets you back to a 
-** live prompt. This is initially designed for the files read from the command 
-** line
+**  Read from the file given by <filename> and close the scanner input
+**  when done.
+**  FuncREAD_NORECOVERY disables the mechanism which ensures that quitting
+**  from a break loop gets you back to a live prompt.
+**
+**  This is initially designed for the files read from the command line
 */
-Obj FuncREAD_NORECOVERY (
-    Obj                 self,
-    Obj                 filename )
+Obj FuncREAD(Obj self, Obj filename)
 {
-    /* check the argument                                                  */
-    while ( ! IsStringConv( filename ) ) {
-        filename = ErrorReturnObj(
-            "READ: <filename> must be a string (not a %s)",
-            (Int)TNAM_OBJ(filename), 0L,
-            "you can replace <filename> via 'return <filename>;'" );
-    }
-
-    /* try to open the file                                                */
-    if ( ! OpenInput( CSTR_STRING(filename) ) ) {
-        return False;
-    }
-
-    /* read the file */
-    switch (READ_NORECOVERY()) {
-    case 0: return False;
-    case 1: return True;
-    case 2: return Fail;
-    default: return Fail;
-    }
+    return ReadFromFile(filename, True);
 }
 
+Obj FuncREAD_NORECOVERY(Obj self, Obj filename)
+{
+    return ReadFromFile(filename, False);
+}
 
 /****************************************************************************
 **
@@ -1020,13 +991,20 @@ Obj FuncREAD_STREAM (
     Obj                 self,
     Obj                 stream )
 {
-    /* try to open the file                                                */
+    Obj res;
+
+    /* try to open the stream */
     if (!OpenInputStream(stream, 0)) {
         return False;
     }
 
-    /* read the test file                                                  */
-    return READ() ? True : False;
+    res = READ_INNER(0);
+
+    if (!CloseInput()) {
+        ErrorQuit("Panic: READ_STREAM cannot close input, this should not happen",
+                  0L, 0L);
+    }
+    return res;
 }
 
 /****************************************************************************
