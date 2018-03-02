@@ -364,25 +364,6 @@ static void READ_TEST_OR_LOOP(void)
         // FIXME: what about other types? e.g. STATUS_ERROR and STATUS_QQUIT
 
     }
-}
-
-
-/****************************************************************************
-**
-*F  READ_LOOP() . . . . . . . . . .  read current input as read-eval-view loop
-**
-**  Read the current input as read-eval-view loop and close the input stream.
-*/
-static void READ_LOOP ( void )
-{
-    READ_TEST_OR_LOOP();
-
-    /* close the input file again, and return 'true'                       */
-    if ( ! CloseInput() ) {
-        ErrorQuit(
-            "Panic: ReadLoop cannot close input, this should not happen",
-            0L, 0L );
-    }
     ClearError();
 }
 
@@ -1011,20 +992,27 @@ Obj FuncREAD_STREAM (
 **
 *F  FuncREAD_STREAM_LOOP( <self>, <stream>, <catcherrstdout> ) . read a stream
 */
-Obj FuncREAD_STREAM_LOOP (
-    Obj                 self,
-    Obj                 stream,
-    Obj                 catcherrstdout )
+Obj FuncREAD_STREAM_LOOP(Obj self, Obj stream, Obj catcherrstdout)
 {
-    /* try to open the file                                                */
+    /* try to open the stream */
     if (!OpenInputStream(stream, 0)) {
         return False;
     }
 
-    /* read the test file                                                  */
+    /* prevent print output being altered */
     LockCurrentOutput(catcherrstdout == True);
-    READ_LOOP();
+
+    READ_TEST_OR_LOOP();
+
+    /* close the input stream again */
+    if (!CloseInput()) {
+        ErrorQuit(
+            "Panic: ReadLoop cannot close input, this should not happen", 0L,
+            0L);
+    }
+
     LockCurrentOutput(0);
+
     return True;
 }
 
