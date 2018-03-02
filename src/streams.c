@@ -200,68 +200,66 @@ Obj FuncREAD_COMMAND_REAL ( Obj self, Obj stream, Obj echo )
 
 static UInt LastReadValueGVar;
 
-static Int READ_INNER ( UInt UseUHQ )
+static Int READ_INNER(UInt UseUHQ)
 {
-    if (STATE(UserHasQuit))
-      {
-        Pr("Warning: Entering READ with UserHasQuit set, this should never happen, resetting",0,0);
+    if (STATE(UserHasQuit)) {
+        Pr("Warning: Entering READ with UserHasQuit set, this should never "
+           "happen, resetting",
+           0, 0);
         STATE(UserHasQuit) = 0;
-      }
-    if (STATE(UserHasQUIT))
-      {
-        Pr("Warning: Entering READ with UserHasQUIT set, this should never happen, resetting",0,0);
+    }
+    if (STATE(UserHasQUIT)) {
+        Pr("Warning: Entering READ with UserHasQUIT set, this should never "
+           "happen, resetting",
+           0, 0);
         STATE(UserHasQUIT) = 0;
-      }
+    }
     MakeReadWriteGVar(LastReadValueGVar);
-    AssGVar( LastReadValueGVar, 0);
+    AssGVar(LastReadValueGVar, 0);
     MakeReadOnlyGVar(LastReadValueGVar);
     /* now do the reading                                                  */
-    while ( 1 ) {
+    while (1) {
         ClearError();
-        Obj evalResult;
-        ExecStatus status = ReadEvalCommand(STATE(BottomLVars), &evalResult, 0);
-	if (STATE(UserHasQuit) || STATE(UserHasQUIT))
-	  break;
+        Obj        evalResult;
+        ExecStatus status =
+            ReadEvalCommand(STATE(BottomLVars), &evalResult, 0);
+        if (STATE(UserHasQuit) || STATE(UserHasQUIT))
+            break;
         /* handle return-value or return-void command                      */
-        if ( status & (STATUS_RETURN_VAL | STATUS_RETURN_VOID) ) {
-            Pr(
-                "'return' must not be used in file read-eval loop",
-                0L, 0L );
+        if (status & (STATUS_RETURN_VAL | STATUS_RETURN_VOID)) {
+            Pr("'return' must not be used in file read-eval loop", 0L, 0L);
         }
 
         /* handle quit command or <end-of-file>                            */
-        else if ( status  & (STATUS_ERROR | STATUS_EOF)) 
-          break;
+        else if (status & (STATUS_ERROR | STATUS_EOF))
+            break;
         else if (status == STATUS_QUIT) {
-          SetRecursionDepth(0);
-          STATE(UserHasQuit) = 1;
-          break;
+            SetRecursionDepth(0);
+            STATE(UserHasQuit) = 1;
+            break;
         }
         else if (status == STATUS_QQUIT) {
-          STATE(UserHasQUIT) = 1;
-          break;
+            STATE(UserHasQUIT) = 1;
+            break;
         }
-        if (evalResult)
-          {
+        if (evalResult) {
             MakeReadWriteGVar(LastReadValueGVar);
-            AssGVar( LastReadValueGVar, evalResult);
+            AssGVar(LastReadValueGVar, evalResult);
             MakeReadOnlyGVar(LastReadValueGVar);
-          }
-        
+        }
     }
 
 
     /* close the input file again, and return 'true'                       */
-    if ( ! CloseInput() ) {
-        ErrorQuit(
-            "Panic: READ cannot close input, this should not happen",
-            0L, 0L );
+    if (!CloseInput()) {
+        ErrorQuit("Panic: READ cannot close input, this should not happen",
+                  0L, 0L);
     }
     ClearError();
 
     if (!UseUHQ && STATE(UserHasQuit)) {
-      STATE(UserHasQuit) = 0; /* stop recovery here */
-      return 2;
+        STATE(UserHasQuit) = 0; /* stop recovery here */
+        return 2;
     }
 
     return 1;
