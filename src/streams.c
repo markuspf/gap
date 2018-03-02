@@ -1018,22 +1018,20 @@ Obj FuncREAD_STREAM_LOOP(Obj self, Obj stream, Obj catcherrstdout)
 **
 *F  FuncREAD_AS_FUNC( <self>, <filename> )  . . . . . . . . . . . read a file
 */
-Obj FuncREAD_AS_FUNC (
-    Obj                 self,
-    Obj                 filename )
+Obj FuncREAD_AS_FUNC(Obj self, Obj filename)
 {
     Obj func;
 
     // check the argument
-    while ( ! IsStringConv( filename ) ) {
+    while (!IsStringConv(filename)) {
         filename = ErrorReturnObj(
             "READ_AS_FUNC: <filename> must be a string (not a %s)",
             (Int)TNAM_OBJ(filename), 0L,
-            "you can replace <filename> via 'return <filename>;'" );
+            "you can replace <filename> via 'return <filename>;'");
     }
 
     // try to open the file as scanner input
-    if ( ! OpenInput( CSTR_STRING(filename) ) ) {
+    if (!OpenInput(CSTR_STRING(filename))) {
         return Fail;
     }
 
@@ -1043,7 +1041,7 @@ Obj FuncREAD_AS_FUNC (
     // close the input again
     if (!CloseInput())
         ErrorQuit("READ_AS_FUNC cannot close input, this should not happen",
-                   0L, 0L);
+                  0L, 0L);
 
     return func;
 }
@@ -1053,9 +1051,7 @@ Obj FuncREAD_AS_FUNC (
 **
 *F  FuncREAD_AS_FUNC_STREAM( <self>, <filename> ) . . . . . . . . read a file
 */
-Obj FuncREAD_AS_FUNC_STREAM (
-    Obj                 self,
-    Obj                 stream )
+Obj FuncREAD_AS_FUNC_STREAM(Obj self, Obj stream)
 {
     Obj func;
 
