@@ -294,23 +294,25 @@ Obj ReadFromFile(Obj filename, Obj recover)
 */
 Obj READ_AS_FUNC ( void )
 {
-    /* now do the reading                                                  */
-    ClearError();
+    Obj func;
     Obj evalResult;
-    UInt type = ReadEvalFile(&evalResult);
+    UInt type;
 
-    /* get the function                                                    */
-    Obj func = (type == 0) ? evalResult : Fail;
+    /* do the reading */
+    ClearError();
+    type = ReadEvalFile(&evalResult);
 
-    /* close the input file again, and return 'true'                       */
-    if ( ! CloseInput() ) {
+    // ReadEvalFile returns 0 if no error happened
+    func = (type == 0) ? evalResult : Fail;
+
+    /* close the input file again, and return 'true' */
+    if (!CloseInput())
         ErrorQuit(
-            "Panic: READ_AS_FUNC cannot close input, this should not happen",
-            0L, 0L );
-    }
+            "READ_AS_FUNC cannot close input, this should not happen",
+            0L, 0L);
     ClearError();
 
-    /* return the function                                                 */
+    /* return the function */
     return func;
 }
 
