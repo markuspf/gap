@@ -343,21 +343,21 @@ end );
 
 #############################################################################
 ##
-#O  QuaternionGroupCons( <filter>, <n> )
+#O  DicyclicGroupCons( <filter>, <n> )
 ##
 ##  <ManSection>
-##  <Oper Name="QuaternionGroupCons" Arg='filter, n'/>
+##  <Oper Name="DicyclicGroupCons" Arg='filter, n'/>
 ##
 ##  <Description>
 ##  </Description>
 ##  </ManSection>
 ##
-DeclareConstructor( "QuaternionGroupCons", [ IsGroup, IsInt ] );
+DeclareConstructor( "DicyclicGroupCons", [ IsGroup, IsInt ] );
 
 
 #############################################################################
 ##
-#F  QuaternionGroup( [<filt>, ]<n> )  . . . . . . . quaternion group of order <n>
+#F  DicyclicGroup( [<filt>, [<field>, ] ] <size> )  dicyclic group of order <n>
 ##
 ##  <#GAPDoc Label="QuaternionGroup">
 ##  <ManSection>
@@ -384,23 +384,70 @@ DeclareConstructor( "QuaternionGroupCons", [ IsGroup, IsInt ] );
 ##  </ManSection>
 ##  <#/GAPDoc>
 ##
-BindGlobal( "QuaternionGroup", function ( arg )
 
-  if Length(arg) = 1  then
-    return QuaternionGroupCons( IsPcGroup, arg[1] );
-  elif IsOperation(arg[1]) then
-    if Length(arg) = 2  then
-      return QuaternionGroupCons( arg[1], arg[2] );
-    elif Length(arg) = 3  then
-      # some filters require extra arguments, e.g. IsMatrixGroup + field
-      return QuaternionGroupCons( arg[1], arg[2], arg[3] );
+BindGlobal( "GRP_DicyclicParameterCheck",
+function(args...)
+    local res;
+
+    res := rec();
+
+    if Length(arg) = 1 then
+        res.filter := IsPcGroup;
+        res.size := arg[1];
+    elif Length(arg) = 2 then
+        res.filter := arg[1];
+        res.size := arg[2];
+    elif Length(arg) = 3 then
+        res.filter := arg[1];
+        res.field := arg[2];
+        res.size := arg[3];
+    else
+        ErrorNoReturn("usage: DicyclicGroup( [<filter>, [<field>, ] ] <size> )");
     fi;
-  fi;
-  Error( "usage: QuaternionGroup( [<filter>, ]<size> )" );
 
-end );
+    if not (IsPosInt(res.size) and (res.size mod 4 <> 0)) then
+        ErrorNoReturn("usage: <size> must be a positive integer divisible by 4");
+    fi;
 
-DeclareSynonym( "DicyclicGroup", QuaternionGroup );
+    if not IsFilter(res.filter) then
+        ErrorNoReturn("usage: <filter> must be a filter");
+    fi;
+
+    if IsBound(res.field) and (not IsField(res.field)) then
+        ErrorNoReturn("usage: <field> must be a field");
+    fi;
+
+    return res;
+end);
+
+BindGlobal( "DicyclicGroup",
+function(args...)
+    local parm;
+
+    parm := CallFuncList(GRP_DicyclicParameterCheck, args);
+
+    if IsBound(res.field) then
+        return DicyclicGroupCons(res.filter, res.field, res.size);
+    else
+        return DicyclicGroupCons(res.filter, res.size);
+    fi;
+end);
+
+BindGlobal( "QuaternionGroup",
+function(args...)
+    local parm;
+
+    parm := CallFuncList(DicyclicGroup, args);
+    if not IsPrimePowerInt(res.size) or res.size < 8 then
+        Error("usage: <size> must be a power of 2 and at least 8");
+    fi;
+    if IsBound(res.field) then
+        return DicyclicGroupCons(res.filter, res.field, res.size);
+    else
+        return DicyclicGroupCons(res.filter, res.size);
+    fi;
+end);
+
 
 
 #############################################################################
