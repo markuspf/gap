@@ -112,36 +112,6 @@ end;
 
 #############################################################################
 ##
-#F  STRING_LOWER( <str> ) . . . . . . . . . convert to lower, remove specials
-##
-##  <ManSection>
-##  <Func Name="STRING_LOWER" Arg='str'/>
-##
-##  <Description>
-##  <!-- seems obsolete now? (FL) -->
-##  </Description>
-##  </ManSection>
-##
-STRING_LOWER_TRANS := 0;
-
-STRING_LOWER := function( str )
-  local i, res;
-  if STRING_LOWER_TRANS = 0 then
-    STRING_LOWER_TRANS := "";
-    for i in [0..255] do 
-      STRING_LOWER_TRANS[i+1] := CHAR_INT(i);
-    od;
-    STRING_LOWER_TRANS{1+[65..90]} := STRING_LOWER_TRANS{1+[97..122]};
-    STRING_LOWER_TRANS{1+[33,126]} := "  ";
-  fi;
-  res := SHALLOW_COPY_OBJ(str);
-  TranslateString(res, STRING_LOWER_TRANS);
-  return res;
-end;
-
-
-#############################################################################
-##
 #F  POSITION_NOT( <list>, <val> [,<from-minus-one>] ) . . . .  find not <val>
 ##
 ##  <ManSection>

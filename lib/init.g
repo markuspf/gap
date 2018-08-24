@@ -485,8 +485,10 @@ CallAndInstallPostRestore( function()
       enc := env.LANG;
     fi;
     if enc <> fail then
-      enc:=STRING_LOWER(enc);
-      if (PositionSublist(enc, "utf-8") <> fail  or
+      # LowercaseString is not available yet
+      if (PositionSublist(enc, "UTF-8") <> fail  or
+          PositionSublist(enc, "UTF8") <> fail or
+          PositionSublist(enc, "utf-8") <> fail or
           PositionSublist(enc, "utf8") <> fail) then
         GAPInfo.TermEncoding := "UTF-8";
       fi;
