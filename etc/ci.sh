@@ -49,10 +49,10 @@ do
     touch anupq*/configure* anupq*/Makefile* anupq*/aclocal.m4
 
     # HACK: skip building digraphs for now -- it doesn't link reliably on travis
-    rm -rf digraphs-*
+    # rm -rf digraphs-*
 
     # HACK: skip building semigroups-3.x for now -- it requires GCC >= 5, which Travis doesn't have
-    rm -rf semigroups-3.*
+    # rm -rf semigroups-3.*
 
     # HACK: skip building float for now -- it doesn't link reliably on travis
     rm -rf float-*
