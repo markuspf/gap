@@ -2,6 +2,7 @@
 # and less buggy gcov
 dist: trusty
 language: c
+compiler: gcc
 
 env:
   global:
