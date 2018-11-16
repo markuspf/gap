@@ -200,6 +200,18 @@ elif ARCH_IS_MAC_OS_X() then
     );
  
 else # UNIX but not Mac OS X
+  # html version using default browser via xdg-open
+  HELP_VIEWER_INFO.("xdg-open") := rec (
+  type := "url",
+  show := function (url)
+      Exec ( Concatenation( "xdg-open \"file://", url, "\"" ) );
+  end);
+
+  HELP_VIEWER_INFO.("xdg-open-pdf") := rec (
+  type := "pdf",
+  show := function (file)
+    Exec ( Concatenation( "xdg-open ", file ) );
+  end);
 
   # html version with netscape
   HELP_VIEWER_INFO.netscape := rec(
