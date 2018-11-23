@@ -1,6 +1,9 @@
 //
 //  syntaxtree.c
 //
+// TODO: Check mutability and copying of objects that
+//       are referenced in a syntax tree.
+//
 #include "syntaxtree.h"
 
 #include "bool.h"
@@ -810,8 +813,33 @@ Obj FuncSYNTAX_TREE(Obj self, Obj func)
     return SyntaxTreeFunc(result, func);
 }
 
+Obj FuncCODE_SYNTAX_TREE(Obj self, Obj tree)
+{
+    Obj n, nams;
+    Int narg, nloc;
+
+    narg = INT_INTOBJ(ElmPRec(tree, RNamName("narg")));
+    nloc = INT_INTOBJ(ElmPRec(tree, RNamName("nloc")));
+
+    nams = NEW_PLIST(T_PLIST, narg + nloc);
+
+    n = ElmPRec(tree, RNamName("argnams"));
+    for(Int i=1; i <= narg; i++)
+        ASS_LIST(nams, i, ELM_LIST(n, i));
+    n = ElmPRec(tree, RNamName("locnams"));
+    for(Int i=1; i <= nloc; i++)
+        ASS_LIST(nams, narg + i, ELM_LIST(n, i));
+
+    CodeBegin();
+    CodeFuncExprBegin(narg, nloc, nams, 0);
+    CodeFuncExprEnd(0);
+
+    return CodeEnd(0L);
+}
+
 static StructGVarFunc GVarFuncs[] = {
     GVAR_FUNC(SYNTAX_TREE, 1, "function"),
+    GVAR_FUNC(CODE_SYNTAX_TREE, 1, "tree"),
     { 0 } };
 
 static Int InitKernel(StructInitInfo * module)
