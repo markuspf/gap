@@ -815,6 +815,16 @@ Obj FuncSYNTAX_TREE(Obj self, Obj func)
 
 typedef Stat (*CodeFuncT)(Obj tree);
 
+Stat SyntaxTreeCodeDefault(Obj tree)
+{
+    return 0;
+}
+
+Stat SyntaxTreeCodeFunccall(Obj tree)
+{
+    return 0;
+}
+
 Stat SyntaxTreeCodeSeqStat(Obj tree)
 {
     UInt size;
@@ -835,17 +845,17 @@ static const CodeFuncT Coders[] = {
     [ T_PROCCALL_6ARGS ] = SyntaxTreeCodeFunccall,
     [ T_PROCCALL_XARGS ] = SyntaxTreeCodeFunccall,
 
-    [ T_PROCCALL_OPTS ] = SyntaxTreeDefaultCompiler,
+    [ T_PROCCALL_OPTS ] = SyntaxTreeCodeDefault,
 
-    [ T_EMPTY ] = SyntaxTreeDefaultCompiler,
+    [ T_EMPTY ] = SyntaxTreeCodeDefault,
 
-    [ T_SEQ_STAT ] = SyntaxTreeSeqStat,
-    [ T_SEQ_STAT2 ] = SyntaxTreeSeqStat,
-    [ T_SEQ_STAT3 ] = SyntaxTreeSeqStat,
-    [ T_SEQ_STAT4 ] = SyntaxTreeSeqStat,
-    [ T_SEQ_STAT5 ] = SyntaxTreeSeqStat,
-    [ T_SEQ_STAT6 ] = SyntaxTreeSeqStat,
-    [ T_SEQ_STAT7 ] = SyntaxTreeSeqStat,
+    [ T_SEQ_STAT ] = SyntaxTreeCodeSeqStat,
+    [ T_SEQ_STAT2 ] = SyntaxTreeCodeSeqStat,
+    [ T_SEQ_STAT3 ] = SyntaxTreeCodeSeqStat,
+    [ T_SEQ_STAT4 ] = SyntaxTreeCodeSeqStat,
+    [ T_SEQ_STAT5 ] = SyntaxTreeCodeSeqStat,
+    [ T_SEQ_STAT6 ] = SyntaxTreeCodeSeqStat,
+    [ T_SEQ_STAT7 ] = SyntaxTreeCodeSeqStat,
 
     [ T_IF ] = SyntaxTreeIf,
     [ T_IF_ELSE ] = SyntaxTreeIf,
@@ -869,7 +879,7 @@ static const CodeFuncT Coders[] = {
     [ T_REPEAT3 ] = SyntaxTreeRepeat,
 
 #ifdef HPCGAP
-    [ T_ATOMIC ] = SyntaxTreeDefaultCompiler,
+    [ T_ATOMIC ] = SyntaxTreeCodeDefault,
 #endif
 
     [ T_BREAK ] = SyntaxTreeCodeBreak,
@@ -963,43 +973,28 @@ static const CodeFuncT Coders[] = {
     [ T_REFLVAR ] = SyntaxTreeRefLVar),
     [ T_ISB_LVAR ] = SyntaxTreeRefLVar),
 
-    [ T_REF_HVAR ] = ARG("hvar", SyntaxTreeArgcompHVar)),
-    [ T_ISB_HVAR ] = ARG("hvar", SyntaxTreeArgcompHVar)),
-    [ T_REF_GVAR ] = ARG("gvar", SyntaxTreeArgcompGVar)),
-    [ T_ISB_GVAR ] = ARG("gvar", SyntaxTreeArgcompGVar)),
+    [ T_REF_HVAR ] = 
+    [ T_ISB_HVAR ] =
+    [ T_REF_GVAR ] = 
+    [ T_ISB_GVAR ] =
 
     // TODO: can this be unified?
     [ T_ELM_LIST ] =
-              ARG_("list"), ARG_("pos")),
-    [ T_ELM2_LIST ] = SyntaxTreeElmList),
+    [ T_ELM2_LIST ] =
     [ T_ELMS_LIST ] =
-              ARG_("list"), ARG_("poss")),
     [ T_ELM_LIST_LEV ] =
-              ARG_("lists"), ARG_("pos"), ARG_("level")),
     [ T_ELMS_LIST_LEV ] =
-              ARG_("lists"), ARG_("poss"), ARG_("level")),
     [ T_ISB_LIST ] =
-              ARG_("list"), ARG_("pos")),
     [ T_ELM_REC_NAME ] =
-              ARG_("record"), ARG("name", SyntaxTreeRNam)),
     [ T_ELM_REC_EXPR ] =
-              ARG_("record"), ARG_("expression")),
     [ T_ISB_REC_NAME ] =
-              ARG_("record"), ARG("name", SyntaxTreeRNam)),
     [ T_ISB_REC_EXPR ] =
-              ARG_("record"), ARG_("expression")),
     [ T_ELM_POSOBJ ] =
-              ARG_("posobj"), ARG_("pos")),
     [ T_ISB_POSOBJ ] =
-              ARG_("posobj"), ARG_("pos")),
     [ T_ELM_COMOBJ_NAME ] =
-              ARG_("comobj"), ARG("name", SyntaxTreeRNam)),
     [ T_ELM_COMOBJ_EXPR ] =
-              ARG_("comobj"), ARG_("expression")),
     [ T_ISB_COMOBJ_NAME ] =
-              ARG_("comobj"), ARG("name", SyntaxTreeRNam)),
     [ T_ISB_COMOBJ_EXPR ] =
-              ARG_("comobj"), ARG_("expression")),
 
 };
 
