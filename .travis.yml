@@ -2,6 +2,11 @@
 dist: xenial
 language: c
 
+os:
+  - windows
+  - linux
+  - osx
+
 env:
   global:
     - CFLAGS="--coverage -O2"
